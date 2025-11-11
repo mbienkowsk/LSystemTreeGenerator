@@ -10,6 +10,10 @@ build:
 test:
     cargo test --all-features --verbose
 
+# Run the app
+run:
+    RUST_LOG=info cargo run
+
 
 # Generate HTML test coverage report in target/coverage/html
 # Requires cargo-binutils, grcov and rustup llvm-tools to be installed

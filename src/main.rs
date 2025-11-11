@@ -1,5 +1,13 @@
+use app::App;
+use winit::event_loop::EventLoop;
+
+mod app;
+mod renderer;
+
 fn main() {
-    println!("Hello, world!");
+    env_logger::init();
+    let event_loop = EventLoop::new().unwrap();
+    event_loop.run_app(&mut App::default()).unwrap();
 }
 
 #[cfg(test)]
