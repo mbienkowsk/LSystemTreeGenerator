@@ -41,7 +41,7 @@ impl ApplicationHandler for App {
             WindowEvent::CloseRequested => event_loop.exit(),
             WindowEvent::RedrawRequested => {
                 if let Some(renderer) = &self.renderer {
-                    renderer.draw();
+                    renderer.draw_cube();
                 }
             }
             _ => {}
