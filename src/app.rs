@@ -1,14 +1,16 @@
+use std::collections::HashSet;
+
 use glium::backend::glutin::SimpleWindowBuilder;
 use glm::Mat4;
 use winit::{
     application::ApplicationHandler,
-    event::{DeviceId, KeyEvent, WindowEvent},
+    event::{DeviceId, ElementState, KeyEvent, WindowEvent},
     event_loop::ActiveEventLoop,
     keyboard::{KeyCode, PhysicalKey},
     window::WindowId,
 };
 
-const DELTA_TIME: f32 = 1.0;
+const DELTA_TIME: f32 = 0.1;
 
 use crate::{camera::FlyCamera, renderer::Renderer};
 
@@ -16,6 +18,7 @@ use crate::{camera::FlyCamera, renderer::Renderer};
 pub struct App {
     renderer: Option<Renderer>,
     camera: Option<FlyCamera>,
+    pressed_keys: HashSet<KeyCode>,
 }
 
 impl ApplicationHandler for App {
@@ -54,19 +57,23 @@ impl ApplicationHandler for App {
             }
             WindowEvent::CloseRequested => event_loop.exit(),
             WindowEvent::RedrawRequested => {
-                if let Some(renderer) = &self.renderer {
-                    let model = Mat4::identity();
-                    let model = glm::rotate_x(&model, 45.0f32.to_radians());
-                    let model = glm::rotate_y(&model, 45.0f32.to_radians());
-
-                    renderer.draw_cube(
-                        model.into(),
-                        self.camera.as_ref().unwrap().get_view_matrix(),
-                        self.camera.as_ref().unwrap().get_projection_matrix(),
-                    );
+                if self.renderer.is_none() {
+                    return;
                 }
+
+                let renderer = self.renderer.as_ref().unwrap();
+                let model = Mat4::identity();
+                renderer.draw_cube(
+                    model.into(),
+                    self.camera.as_ref().unwrap().get_view_matrix(),
+                    self.camera.as_ref().unwrap().get_projection_matrix(),
+                );
+
+                self.handle_movement();
             }
-            WindowEvent::KeyboardInput { event, .. } => self.handle_keypress(&event),
+            WindowEvent::KeyboardInput { event, .. } => {
+                self.handle_key_event(&event);
+            }
             _ => {}
         }
     }
@@ -91,19 +98,31 @@ impl App {
         }
     }
 
-    fn handle_keypress(&mut self, event: &KeyEvent) {
-        let camera = self.camera.as_mut().unwrap();
-
-        if let PhysicalKey::Code(key_code) = event.physical_key {
-            match key_code {
-                KeyCode::KeyW => camera.move_forward(DELTA_TIME),
-                KeyCode::KeyS => camera.move_backward(DELTA_TIME),
-                KeyCode::KeyA => camera.move_left(DELTA_TIME),
-                KeyCode::KeyD => camera.move_right(DELTA_TIME),
-                KeyCode::ArrowUp | KeyCode::KeyK => camera.move_up(DELTA_TIME),
-                KeyCode::ArrowDown | KeyCode::KeyJ => camera.move_down(DELTA_TIME),
-                _ => {}
+    fn handle_key_event(&mut self, event: &KeyEvent) {
+        match (event.state, event.physical_key) {
+            (ElementState::Pressed, PhysicalKey::Code(code)) => {
+                self.pressed_keys.insert(code);
             }
+            (ElementState::Released, PhysicalKey::Code(code)) => {
+                self.pressed_keys.remove(&code);
+            }
+            _ => {}
+        }
+    }
+
+    fn handle_movement(&mut self) {
+        let camera = self.camera.as_mut().unwrap();
+        if self.pressed_keys.contains(&KeyCode::KeyW) {
+            camera.move_forward(DELTA_TIME);
+        }
+        if self.pressed_keys.contains(&KeyCode::KeyS) {
+            camera.move_backward(DELTA_TIME);
+        }
+        if self.pressed_keys.contains(&KeyCode::KeyA) {
+            camera.move_left(DELTA_TIME);
+        }
+        if self.pressed_keys.contains(&KeyCode::KeyD) {
+            camera.move_right(DELTA_TIME);
         }
     }
 }
