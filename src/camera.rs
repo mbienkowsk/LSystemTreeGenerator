@@ -43,8 +43,8 @@ impl FlyCamera {
             znear: 0.1,
             zfar: 100.0,
 
-            speed: 5.0,
-            sensitivity: 0.1,
+            speed: 0.5,
+            sensitivity: 0.2,
         }
     }
 
@@ -63,11 +63,12 @@ impl FlyCamera {
         projection_matrix.into()
     }
 
-    fn update_aspect_ratio(&mut self, size: (f32, f32)) {
+    pub fn update_aspect_ratio(&mut self, size: (f32, f32)) {
         self.aspect_ratio = size.0 / size.1;
     }
 
     fn handle_movement(&mut self, direction: &MovementDirection, delta_time: f32) {
+        log::info!("Movement: {direction:?} with delta_time={delta_time}",);
         let velocity = self.speed * delta_time;
         let right = glm::normalize(&glm::cross(&self.front, &WORLD_UP));
         match direction {
@@ -80,14 +81,6 @@ impl FlyCamera {
         }
     }
 
-    fn handle_mouse_movement(&mut self, xoffset: f32, yoffset: f32) {
-        let xoffset = xoffset * self.sensitivity;
-        let yoffset = yoffset * self.sensitivity;
-        self.yaw += xoffset;
-        self.update_pitch(yoffset);
-        self.update_front();
-    }
-
     fn update_front(&mut self) {
         let front = glm::vec3(
             self.yaw.to_radians().cos() * self.pitch.to_radians().cos(),
@@ -98,16 +91,50 @@ impl FlyCamera {
     }
 
     fn update_pitch(&mut self, yoffset: f32) {
-        self.pitch += yoffset;
+        self.pitch -= yoffset;
 
         match self.pitch.clamp(MIN_PITCH, MAX_PITCH) {
-            MAX_PITCH => info!("Pitch clamped to MAX_PITCH"),
-            MIN_PITCH => info!("Pitch clamped to MIN_PITCH"),
+            MAX_PITCH => log::trace!("Pitch clamped to MAX_PITCH"),
+            MIN_PITCH => log::trace!("Pitch clamped to MIN_PITCH"),
             _ => {}
         }
     }
+
+    pub fn move_forward(&mut self, delta_time: f32) {
+        self.handle_movement(&MovementDirection::Forward, delta_time);
+    }
+
+    pub fn move_backward(&mut self, delta_time: f32) {
+        self.handle_movement(&MovementDirection::Backward, delta_time);
+    }
+
+    pub fn move_left(&mut self, delta_time: f32) {
+        self.handle_movement(&MovementDirection::Left, delta_time);
+    }
+
+    pub fn move_right(&mut self, delta_time: f32) {
+        self.handle_movement(&MovementDirection::Right, delta_time);
+    }
+
+    pub fn move_up(&mut self, delta_time: f32) {
+        self.handle_movement(&MovementDirection::Up, delta_time);
+    }
+
+    pub fn move_down(&mut self, delta_time: f32) {
+        self.handle_movement(&MovementDirection::Down, delta_time);
+    }
+
+    pub fn handle_mouse_movement(&mut self, xoffset: f32, yoffset: f32) {
+        log::trace!("Mouse movement detected: xoffset={xoffset}, yoffset={yoffset}");
+        let xoffset = xoffset * self.sensitivity;
+        let yoffset = yoffset * self.sensitivity;
+        self.yaw += xoffset;
+        self.update_pitch(yoffset);
+        self.update_front();
+    }
 }
 
+#[derive(Debug)]
 pub enum MovementDirection {
     Forward,
     Backward,

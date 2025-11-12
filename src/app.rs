@@ -1,9 +1,14 @@
 use glium::backend::glutin::SimpleWindowBuilder;
 use glm::Mat4;
 use winit::{
-    application::ApplicationHandler, event::WindowEvent, event_loop::ActiveEventLoop,
+    application::ApplicationHandler,
+    event::{DeviceId, KeyEvent, WindowEvent},
+    event_loop::ActiveEventLoop,
+    keyboard::{KeyCode, PhysicalKey},
     window::WindowId,
 };
+
+const DELTA_TIME: f32 = 1.0;
 
 use crate::{camera::FlyCamera, renderer::Renderer};
 
@@ -43,6 +48,9 @@ impl ApplicationHandler for App {
                 if let Some(renderer) = &self.renderer {
                     renderer.resize(window_size.into());
                 }
+                if let Some(camera) = &mut self.camera {
+                    camera.update_aspect_ratio(window_size.into());
+                }
             }
             WindowEvent::CloseRequested => event_loop.exit(),
             WindowEvent::RedrawRequested => {
@@ -58,7 +66,44 @@ impl ApplicationHandler for App {
                     );
                 }
             }
+            WindowEvent::KeyboardInput { event, .. } => self.handle_keypress(&event),
             _ => {}
+        }
+    }
+
+    fn device_event(
+        &mut self,
+        _event_loop: &ActiveEventLoop,
+        _device_id: DeviceId,
+        event: winit::event::DeviceEvent,
+    ) {
+        if let winit::event::DeviceEvent::MouseMotion { delta } = event {
+            self.handle_mouse_movement(delta);
+        }
+    }
+}
+
+impl App {
+    fn handle_mouse_movement(&mut self, delta: (f64, f64)) {
+        if let Some(camera) = self.camera.as_mut() {
+            let (delta_x, delta_y) = delta;
+            camera.handle_mouse_movement(delta_x as f32, delta_y as f32);
+        }
+    }
+
+    fn handle_keypress(&mut self, event: &KeyEvent) {
+        let camera = self.camera.as_mut().unwrap();
+
+        if let PhysicalKey::Code(key_code) = event.physical_key {
+            match key_code {
+                KeyCode::KeyW => camera.move_forward(DELTA_TIME),
+                KeyCode::KeyS => camera.move_backward(DELTA_TIME),
+                KeyCode::KeyA => camera.move_left(DELTA_TIME),
+                KeyCode::KeyD => camera.move_right(DELTA_TIME),
+                KeyCode::ArrowUp | KeyCode::KeyK => camera.move_up(DELTA_TIME),
+                KeyCode::ArrowDown | KeyCode::KeyJ => camera.move_down(DELTA_TIME),
+                _ => {}
+            }
         }
     }
 }
