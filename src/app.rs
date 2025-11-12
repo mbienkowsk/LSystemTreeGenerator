@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use winit::window::CursorGrabMode;
 
 use glium::backend::glutin::SimpleWindowBuilder;
 use glm::Mat4;
@@ -26,6 +27,11 @@ impl ApplicationHandler for App {
         let (window, display) = SimpleWindowBuilder::new()
             .with_title("L-System generator")
             .build(event_loop);
+
+        if let Err(e) = window.set_cursor_grab(CursorGrabMode::Confined) {
+            log::warn!("Could not grab cursor: {e:?}");
+        }
+        window.set_cursor_visible(false);
 
         self.renderer = Some(Renderer::new(window, display));
         self.camera = Some(FlyCamera::new(
