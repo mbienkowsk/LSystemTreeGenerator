@@ -64,7 +64,7 @@ impl FlyCamera {
         self.aspect_ratio = size.0 / size.1;
     }
 
-    fn handle_movement(&mut self, direction: &MovementDirection, delta_time: f32) {
+    pub fn handle_movement(&mut self, direction: &MovementDirection, delta_time: f32) {
         log::info!("Movement: {direction:?} with delta_time={delta_time}",);
         let velocity = self.speed * delta_time;
         let right = glm::normalize(&glm::cross(&self.front, &WORLD_UP));
@@ -95,30 +95,6 @@ impl FlyCamera {
             MIN_PITCH => log::trace!("Pitch clamped to MIN_PITCH"),
             _ => {}
         }
-    }
-
-    pub fn move_forward(&mut self, delta_time: f32) {
-        self.handle_movement(&MovementDirection::Forward, delta_time);
-    }
-
-    pub fn move_backward(&mut self, delta_time: f32) {
-        self.handle_movement(&MovementDirection::Backward, delta_time);
-    }
-
-    pub fn move_left(&mut self, delta_time: f32) {
-        self.handle_movement(&MovementDirection::Left, delta_time);
-    }
-
-    pub fn move_right(&mut self, delta_time: f32) {
-        self.handle_movement(&MovementDirection::Right, delta_time);
-    }
-
-    pub fn move_up(&mut self, delta_time: f32) {
-        self.handle_movement(&MovementDirection::Up, delta_time);
-    }
-
-    pub fn move_down(&mut self, delta_time: f32) {
-        self.handle_movement(&MovementDirection::Down, delta_time);
     }
 
     pub fn handle_mouse_movement(&mut self, xoffset: f32, yoffset: f32) {

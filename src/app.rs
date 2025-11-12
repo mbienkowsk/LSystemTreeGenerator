@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use winit::window::CursorGrabMode;
 
 use glium::backend::glutin::SimpleWindowBuilder;
@@ -13,7 +13,10 @@ use winit::{
 
 const DELTA_TIME: f32 = 0.1;
 
-use crate::{camera::FlyCamera, renderer::Renderer};
+use crate::{
+    camera::{FlyCamera, MovementDirection},
+    renderer::Renderer,
+};
 
 #[derive(Default)]
 pub struct App {
@@ -117,25 +120,21 @@ impl App {
     }
 
     fn handle_movement(&mut self) {
-        // TODO: do it nicer via some hashmap or something
+        #[rustfmt::skip]
+        let bindings: HashMap<Vec<KeyCode>, MovementDirection> = HashMap::from([
+            (vec![KeyCode::KeyW, KeyCode::KeyK], MovementDirection::Forward),
+            (vec![KeyCode::KeyS, KeyCode::KeyJ], MovementDirection::Backward),
+            (vec![KeyCode::KeyA, KeyCode::KeyH], MovementDirection::Left),
+            (vec![KeyCode::KeyD, KeyCode::KeyL], MovementDirection::Right),
+            (vec![KeyCode::Space], MovementDirection::Up),
+            (vec![KeyCode::KeyZ], MovementDirection::Down),
+        ]);
+
         let camera = self.camera.as_mut().unwrap();
-        if self.pressed_keys.contains(&KeyCode::KeyW) {
-            camera.move_forward(DELTA_TIME);
-        }
-        if self.pressed_keys.contains(&KeyCode::KeyS) {
-            camera.move_backward(DELTA_TIME);
-        }
-        if self.pressed_keys.contains(&KeyCode::KeyA) {
-            camera.move_left(DELTA_TIME);
-        }
-        if self.pressed_keys.contains(&KeyCode::KeyD) {
-            camera.move_right(DELTA_TIME);
-        }
-        if self.pressed_keys.contains(&KeyCode::Space) {
-            camera.move_up(DELTA_TIME);
-        }
-        if self.pressed_keys.contains(&KeyCode::KeyZ) {
-            camera.move_down(DELTA_TIME);
+        for (key, value) in &bindings {
+            if key.iter().any(|k| self.pressed_keys.contains(k)) {
+                camera.handle_movement(value, DELTA_TIME);
+            }
         }
     }
 }
