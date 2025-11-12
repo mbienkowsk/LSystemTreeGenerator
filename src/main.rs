@@ -3,6 +3,7 @@ use winit::event_loop::EventLoop;
 
 mod app;
 mod renderer;
+mod shaders;
 
 fn main() {
     env_logger::init();
