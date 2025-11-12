@@ -1,5 +1,3 @@
-use log::info;
-
 const WORLD_UP: glm::Vec3 = glm::Vec3::new(0.0, 1.0, 0.0);
 const MIN_PITCH: f32 = -89.0;
 const MAX_PITCH: f32 = 89.0;
@@ -32,7 +30,6 @@ impl FlyCamera {
     pub fn new(position: glm::Vec3, aspect_ratio: f32) -> Self {
         Self {
             // i made these constants up, but who would want to parametrize all this
-            // shit
             position,
             front: glm::vec3(0.0, 0.0, -1.0),
             yaw: -90.0,

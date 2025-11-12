@@ -117,6 +117,7 @@ impl App {
     }
 
     fn handle_movement(&mut self) {
+        // TODO: do it nicer via some hashmap or something
         let camera = self.camera.as_mut().unwrap();
         if self.pressed_keys.contains(&KeyCode::KeyW) {
             camera.move_forward(DELTA_TIME);
@@ -129,6 +130,12 @@ impl App {
         }
         if self.pressed_keys.contains(&KeyCode::KeyD) {
             camera.move_right(DELTA_TIME);
+        }
+        if self.pressed_keys.contains(&KeyCode::Space) {
+            camera.move_up(DELTA_TIME);
+        }
+        if self.pressed_keys.contains(&KeyCode::KeyZ) {
+            camera.move_down(DELTA_TIME);
         }
     }
 }
