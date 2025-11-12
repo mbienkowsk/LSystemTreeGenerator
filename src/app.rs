@@ -11,6 +11,7 @@ use winit::{
     window::WindowId,
 };
 
+// TODO: this could probably be calculated based on time since last frame instead
 const DELTA_TIME: f32 = 0.1;
 
 use crate::{
@@ -100,6 +101,7 @@ impl ApplicationHandler for App {
 }
 
 impl App {
+    #[allow(clippy::cast_possible_truncation)]
     fn handle_mouse_movement(&mut self, delta: (f64, f64)) {
         if let Some(camera) = self.camera.as_mut() {
             let (delta_x, delta_y) = delta;
