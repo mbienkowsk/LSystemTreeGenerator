@@ -1,4 +1,4 @@
-use crate::shaders::{FRAGMENT_SHADER_SRC, VERTEX_SHADER_SRC};
+use crate::shaders::make_shader_program;
 use glium::glutin::surface::WindowSurface;
 use glium::{
     Depth, DepthTest, Display, DrawParameters, Program, Surface, implement_vertex, uniform,
@@ -14,10 +14,13 @@ pub struct Renderer {
 
 impl Renderer {
     pub fn new(window: Window, display: Display<WindowSurface>) -> Self {
-        let program = Program::from_source(&display, VERTEX_SHADER_SRC, FRAGMENT_SHADER_SRC, None)
-            .expect("Failed to create shader program");
+        let program = make_shader_program(&display).expect("Failed to create shader program");
 
-        Renderer { window, display, program }
+        Renderer {
+            window,
+            display,
+            program,
+        }
     }
 
     pub fn requrest_redraw(&self) {
