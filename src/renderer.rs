@@ -70,7 +70,7 @@ impl Renderer {
             .expect("Failed to draw frame");
         frame.finish().expect("Failed to destroy frame");
     }
-    
+
     pub fn draw_model(
         &self,
         model: Model,
@@ -79,7 +79,13 @@ impl Renderer {
         projection_matrix: [[f32; 4]; 4],
     ) {
         let (vertices, indices) = Self::model_to_vertices_and_indices(model);
-        self.draw(&vertices, &indices, model_matrix, view_matrix, projection_matrix);
+        self.draw(
+            &vertices,
+            &indices,
+            model_matrix,
+            view_matrix,
+            projection_matrix,
+        );
     }
 
     fn model_to_vertices_and_indices(model: Model) -> (Vec<Vertex>, Vec<u16>) {
@@ -92,18 +98,16 @@ impl Renderer {
         let n_vertices = positions.len() / 3;
 
         let vertices: Vec<Vertex> = (0..n_vertices)
-            .map(|i| {
-                Vertex {
-                    position: [positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]],
-                    normal: [normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2]],
-                }
+            .map(|i| Vertex {
+                position: [positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]],
+                normal: [normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2]],
             })
             .collect();
 
         let indices: Vec<u16> = mesh.indices.iter().map(|&i| i as u16).collect();
 
         (vertices, indices)
-    } 
+    }
 
     #[allow(clippy::cast_precision_loss)]
     pub fn get_aspect_ratio(&self) -> f32 {

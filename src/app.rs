@@ -45,12 +45,6 @@ impl ApplicationHandler for App {
         ));
     }
 
-    fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
-        if let Some(ref renderer) = self.renderer {
-            renderer.requrest_redraw();
-        }
-    }
-
     fn window_event(
         &mut self,
         event_loop: &ActiveEventLoop,
@@ -100,6 +94,12 @@ impl ApplicationHandler for App {
     ) {
         if let winit::event::DeviceEvent::MouseMotion { delta } = event {
             self.handle_mouse_movement(delta);
+        }
+    }
+
+    fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
+        if let Some(ref renderer) = self.renderer {
+            renderer.requrest_redraw();
         }
     }
 }
