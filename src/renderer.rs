@@ -9,11 +9,15 @@ use winit::window::Window;
 pub struct Renderer {
     window: Window,
     display: Display<WindowSurface>,
+    program: Program,
 }
 
 impl Renderer {
     pub fn new(window: Window, display: Display<WindowSurface>) -> Self {
-        Renderer { window, display }
+        let program = Program::from_source(&display, VERTEX_SHADER_SRC, FRAGMENT_SHADER_SRC, None)
+            .expect("Failed to create shader program");
+
+        Renderer { window, display, program }
     }
 
     pub fn requrest_redraw(&self) {
@@ -34,9 +38,6 @@ impl Renderer {
     ) {
         let mut frame = self.display.draw();
         frame.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
-        let program =
-            Program::from_source(&self.display, VERTEX_SHADER_SRC, FRAGMENT_SHADER_SRC, None);
-
         let model_mat3 = Mat3::from_fn(|r, c| model_matrix[r][c]);
         let normal_matrix: [[f32; 3]; 3] = glm::inverse_transpose(model_mat3).into();
 
@@ -58,7 +59,7 @@ impl Renderer {
                     indices,
                 )
                 .unwrap(),
-                &program.unwrap(),
+                &self.program,
                 &uniform! {model: model_matrix, view: view_matrix, projection: projection_matrix, normal_matrix: normal_matrix},
                 &params,
             )
