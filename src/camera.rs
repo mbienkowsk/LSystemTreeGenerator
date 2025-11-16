@@ -66,15 +66,15 @@ impl FlyCamera {
 
     pub fn handle_movement(&mut self, direction: &MovementDirection, delta_time: f32) {
         log::info!("Movement: {direction:?} with delta_time={delta_time}",);
-        let velocity = self.speed * delta_time;
+        let displacement = self.speed * delta_time;
         let right = glm::normalize(&glm::cross(&self.front, &WORLD_UP));
         match direction {
-            MovementDirection::Forward => self.position += self.front * velocity,
-            MovementDirection::Backward => self.position -= self.front * velocity,
-            MovementDirection::Left => self.position -= right * velocity,
-            MovementDirection::Right => self.position += right * velocity,
-            MovementDirection::Up => self.position += WORLD_UP * velocity,
-            MovementDirection::Down => self.position -= WORLD_UP * velocity,
+            MovementDirection::Forward => self.position += self.front * displacement,
+            MovementDirection::Backward => self.position -= self.front * displacement,
+            MovementDirection::Left => self.position -= right * displacement,
+            MovementDirection::Right => self.position += right * displacement,
+            MovementDirection::Up => self.position += WORLD_UP * displacement,
+            MovementDirection::Down => self.position -= WORLD_UP * displacement,
         }
     }
 
