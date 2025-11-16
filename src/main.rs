@@ -6,6 +6,7 @@ mod app;
 mod camera;
 mod renderer;
 mod shaders;
+mod model_loader;
 
 fn main() {
     env_logger::init();
