@@ -3,6 +3,7 @@ use winit::window::CursorGrabMode;
 
 use glium::backend::glutin::SimpleWindowBuilder;
 use glm::Mat4;
+use tobj::Model;
 use winit::{
     application::ApplicationHandler,
     event::{DeviceId, ElementState, KeyEvent, WindowEvent},
@@ -25,6 +26,7 @@ pub struct App {
     renderer: Option<Renderer>,
     camera: Option<FlyCamera>,
     pressed_keys: HashSet<KeyCode>,
+    models: Vec<Model>,
 }
 
 impl ApplicationHandler for App {
@@ -43,6 +45,7 @@ impl ApplicationHandler for App {
             glm::vec3(0.0, 0.0, 5.0),
             self.renderer.as_ref().unwrap().get_aspect_ratio(),
         ));
+        self.models = vec![load_monkey()];
     }
 
     fn window_event(
@@ -67,15 +70,16 @@ impl ApplicationHandler for App {
                 }
 
                 let renderer = self.renderer.as_ref().unwrap();
-                let model = Mat4::identity();
-                let monkey_model = load_monkey();
+                let model_matrix = Mat4::identity();
 
-                renderer.draw_model(
-                    monkey_model,
-                    model.into(),
-                    self.camera.as_ref().unwrap().get_view_matrix(),
-                    self.camera.as_ref().unwrap().get_projection_matrix(),
-                );
+                for model in &self.models {
+                    renderer.draw_model(
+                        model,
+                        model_matrix.into(),
+                        self.camera.as_ref().unwrap().get_view_matrix(),
+                        self.camera.as_ref().unwrap().get_projection_matrix(),
+                    );
+                }
 
                 self.handle_movement();
             }

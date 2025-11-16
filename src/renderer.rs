@@ -73,7 +73,7 @@ impl Renderer {
 
     pub fn draw_model(
         &self,
-        model: Model,
+        model: &Model,
         model_matrix: [[f32; 4]; 4],
         view_matrix: [[f32; 4]; 4],
         projection_matrix: [[f32; 4]; 4],
@@ -88,7 +88,7 @@ impl Renderer {
         );
     }
 
-    fn model_to_vertices_and_indices(model: Model) -> (Vec<Vertex>, Vec<u16>) {
+    fn model_to_vertices_and_indices(model: &Model) -> (Vec<Vertex>, Vec<u16>) {
         let mesh = &model.mesh;
         let positions = &mesh.positions;
         let normals = &mesh.normals;
