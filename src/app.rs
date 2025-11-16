@@ -69,18 +69,7 @@ impl ApplicationHandler for App {
                     return;
                 }
 
-                let renderer = self.renderer.as_ref().unwrap();
-                let model_matrix = Mat4::identity();
-
-                for model in &self.models {
-                    renderer.draw_model(
-                        model,
-                        model_matrix.into(),
-                        self.camera.as_ref().unwrap().get_view_matrix(),
-                        self.camera.as_ref().unwrap().get_projection_matrix(),
-                    );
-                }
-
+                self.render_scene();
                 self.handle_movement();
             }
             WindowEvent::KeyboardInput { event, .. } => {
@@ -145,6 +134,20 @@ impl App {
             if key.iter().any(|k| self.pressed_keys.contains(k)) {
                 camera.handle_movement(value, DELTA_TIME);
             }
+        }
+    }
+
+    fn render_scene(&mut self) {
+        let renderer = self.renderer.as_ref().unwrap();
+        let model_matrix = Mat4::identity();
+
+        for model in &self.models {
+            renderer.draw_model(
+                model,
+                model_matrix.into(),
+                self.camera.as_ref().unwrap().get_view_matrix(),
+                self.camera.as_ref().unwrap().get_projection_matrix(),
+            );
         }
     }
 }
