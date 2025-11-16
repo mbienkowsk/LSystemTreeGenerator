@@ -3,6 +3,7 @@ use winit::window::CursorGrabMode;
 
 use glium::backend::glutin::SimpleWindowBuilder;
 use glm::Mat4;
+use tobj::Model;
 use winit::{
     application::ApplicationHandler,
     event::{DeviceId, ElementState, KeyEvent, WindowEvent},
@@ -14,6 +15,7 @@ use winit::{
 // TODO: this could probably be calculated based on time since last frame instead
 const DELTA_TIME: f32 = 0.1;
 
+use crate::model_loader::load_monkey;
 use crate::{
     camera::{FlyCamera, MovementDirection},
     renderer::Renderer,
@@ -24,6 +26,7 @@ pub struct App {
     renderer: Option<Renderer>,
     camera: Option<FlyCamera>,
     pressed_keys: HashSet<KeyCode>,
+    models: Vec<Model>,
 }
 
 impl ApplicationHandler for App {
@@ -42,12 +45,7 @@ impl ApplicationHandler for App {
             glm::vec3(0.0, 0.0, 5.0),
             self.renderer.as_ref().unwrap().get_aspect_ratio(),
         ));
-    }
-
-    fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
-        if let Some(ref renderer) = self.renderer {
-            renderer.requrest_redraw();
-        }
+        self.models = vec![load_monkey()];
     }
 
     fn window_event(
@@ -71,14 +69,7 @@ impl ApplicationHandler for App {
                     return;
                 }
 
-                let renderer = self.renderer.as_ref().unwrap();
-                let model = Mat4::identity();
-                renderer.draw_cube(
-                    model.into(),
-                    self.camera.as_ref().unwrap().get_view_matrix(),
-                    self.camera.as_ref().unwrap().get_projection_matrix(),
-                );
-
+                self.render_scene();
                 self.handle_movement();
             }
             WindowEvent::KeyboardInput { event, .. } => {
@@ -96,6 +87,12 @@ impl ApplicationHandler for App {
     ) {
         if let winit::event::DeviceEvent::MouseMotion { delta } = event {
             self.handle_mouse_movement(delta);
+        }
+    }
+
+    fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
+        if let Some(ref renderer) = self.renderer {
+            renderer.requrest_redraw();
         }
     }
 }
@@ -137,6 +134,20 @@ impl App {
             if key.iter().any(|k| self.pressed_keys.contains(k)) {
                 camera.handle_movement(value, DELTA_TIME);
             }
+        }
+    }
+
+    fn render_scene(&mut self) {
+        let renderer = self.renderer.as_ref().unwrap();
+        let model_matrix = Mat4::identity();
+
+        for model in &self.models {
+            renderer.draw_model(
+                model,
+                model_matrix.into(),
+                self.camera.as_ref().unwrap().get_view_matrix(),
+                self.camera.as_ref().unwrap().get_projection_matrix(),
+            );
         }
     }
 }

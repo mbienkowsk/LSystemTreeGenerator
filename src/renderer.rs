@@ -4,6 +4,7 @@ use glium::{
     Depth, DepthTest, Display, DrawParameters, Program, Surface, implement_vertex, uniform,
 };
 use glm::Mat3;
+use tobj::Model;
 use winit::window::Window;
 
 pub struct Renderer {
@@ -70,127 +71,14 @@ impl Renderer {
         frame.finish().expect("Failed to destroy frame");
     }
 
-    #[allow(clippy::too_many_lines)]
-    pub fn draw_cube(
+    pub fn draw_model(
         &self,
+        model: &Model,
         model_matrix: [[f32; 4]; 4],
         view_matrix: [[f32; 4]; 4],
         projection_matrix: [[f32; 4]; 4],
     ) {
-        let vertices = vec![
-            // Back face (z = -0.5)
-            Vertex {
-                position: [-0.5, -0.5, -0.5],
-                normal: [0.0, 0.0, -1.0],
-            },
-            Vertex {
-                position: [0.5, -0.5, -0.5],
-                normal: [0.0, 0.0, -1.0],
-            },
-            Vertex {
-                position: [0.5, 0.5, -0.5],
-                normal: [0.0, 0.0, -1.0],
-            },
-            Vertex {
-                position: [-0.5, 0.5, -0.5],
-                normal: [0.0, 0.0, -1.0],
-            },
-            // Front face (z = 0.5)
-            Vertex {
-                position: [-0.5, -0.5, 0.5],
-                normal: [0.0, 0.0, 1.0],
-            },
-            Vertex {
-                position: [0.5, -0.5, 0.5],
-                normal: [0.0, 0.0, 1.0],
-            },
-            Vertex {
-                position: [0.5, 0.5, 0.5],
-                normal: [0.0, 0.0, 1.0],
-            },
-            Vertex {
-                position: [-0.5, 0.5, 0.5],
-                normal: [0.0, 0.0, 1.0],
-            },
-            // Left face (x = -0.5)
-            Vertex {
-                position: [-0.5, -0.5, -0.5],
-                normal: [-1.0, 0.0, 0.0],
-            },
-            Vertex {
-                position: [-0.5, -0.5, 0.5],
-                normal: [-1.0, 0.0, 0.0],
-            },
-            Vertex {
-                position: [-0.5, 0.5, 0.5],
-                normal: [-1.0, 0.0, 0.0],
-            },
-            Vertex {
-                position: [-0.5, 0.5, -0.5],
-                normal: [-1.0, 0.0, 0.0],
-            },
-            // Right face (x = 0.5)
-            Vertex {
-                position: [0.5, -0.5, -0.5],
-                normal: [1.0, 0.0, 0.0],
-            },
-            Vertex {
-                position: [0.5, -0.5, 0.5],
-                normal: [1.0, 0.0, 0.0],
-            },
-            Vertex {
-                position: [0.5, 0.5, 0.5],
-                normal: [1.0, 0.0, 0.0],
-            },
-            Vertex {
-                position: [0.5, 0.5, -0.5],
-                normal: [1.0, 0.0, 0.0],
-            },
-            // Bottom face (y = -0.5)
-            Vertex {
-                position: [-0.5, -0.5, -0.5],
-                normal: [0.0, -1.0, 0.0],
-            },
-            Vertex {
-                position: [0.5, -0.5, -0.5],
-                normal: [0.0, -1.0, 0.0],
-            },
-            Vertex {
-                position: [0.5, -0.5, 0.5],
-                normal: [0.0, -1.0, 0.0],
-            },
-            Vertex {
-                position: [-0.5, -0.5, 0.5],
-                normal: [0.0, -1.0, 0.0],
-            },
-            // Top face (y = 0.5)
-            Vertex {
-                position: [-0.5, 0.5, -0.5],
-                normal: [0.0, 1.0, 0.0],
-            },
-            Vertex {
-                position: [0.5, 0.5, -0.5],
-                normal: [0.0, 1.0, 0.0],
-            },
-            Vertex {
-                position: [0.5, 0.5, 0.5],
-                normal: [0.0, 1.0, 0.0],
-            },
-            Vertex {
-                position: [-0.5, 0.5, 0.5],
-                normal: [0.0, 1.0, 0.0],
-            },
-        ];
-
-        let indices: Vec<u16> = vec![
-            0, 1, 2, 0, 2, 3, // Back
-            4, 5, 6, 4, 6, 7, // Front
-            8, 9, 10, 8, 10, 11, // Left
-            12, 13, 14, 12, 14, 15, // Right
-            16, 17, 18, 16, 18, 19, // Bottom
-            20, 21, 22, 20, 22, 23, // Top
-        ];
-
+        let (vertices, indices) = Self::model_to_vertices_and_indices(model);
         self.draw(
             &vertices,
             &indices,
@@ -198,6 +86,27 @@ impl Renderer {
             view_matrix,
             projection_matrix,
         );
+    }
+
+    fn model_to_vertices_and_indices(model: &Model) -> (Vec<Vertex>, Vec<u16>) {
+        let mesh = &model.mesh;
+        let positions = &mesh.positions;
+        let normals = &mesh.normals;
+
+        assert_eq!(positions.len() % 3, 0);
+        assert_eq!(positions.len(), normals.len());
+        let n_vertices = positions.len() / 3;
+
+        let vertices: Vec<Vertex> = (0..n_vertices)
+            .map(|i| Vertex {
+                position: [positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]],
+                normal: [normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2]],
+            })
+            .collect();
+
+        let indices: Vec<u16> = mesh.indices.iter().map(|&i| i as u16).collect();
+
+        (vertices, indices)
     }
 
     #[allow(clippy::cast_precision_loss)]
