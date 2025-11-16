@@ -1,8 +1,11 @@
 use app::App;
 use winit::event_loop::EventLoop;
+extern crate nalgebra_glm as glm;
 
 mod app;
+mod camera;
 mod renderer;
+mod shaders;
 
 fn main() {
     env_logger::init();
