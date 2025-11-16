@@ -11,7 +11,7 @@ pub fn load_monkey() -> Model {
     )
     .unwrap();
     assert_eq!(models.len(), 1, "Expected exactly one model in monkey.obj");
-    models.get(0).expect("Expected monkey model").clone()
+    models.first().expect("Expected monkey model").clone()
 }
 
 #[cfg(test)]
@@ -40,8 +40,8 @@ mod tests {
             monkey_model.mesh.texcoords.len()
         );
 
-        assert!(monkey_model.mesh.positions.len() > 0);
-        assert!(monkey_model.mesh.normals.len() > 0);
+        assert!(!monkey_model.mesh.positions.is_empty());
+        assert!(!monkey_model.mesh.normals.is_empty());
         assert_eq!(
             monkey_model.mesh.positions.len(),
             monkey_model.mesh.normals.len()
