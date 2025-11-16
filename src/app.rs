@@ -14,6 +14,7 @@ use winit::{
 // TODO: this could probably be calculated based on time since last frame instead
 const DELTA_TIME: f32 = 0.1;
 
+use crate::model_loader::load_monkey;
 use crate::{
     camera::{FlyCamera, MovementDirection},
     renderer::Renderer,
@@ -73,7 +74,10 @@ impl ApplicationHandler for App {
 
                 let renderer = self.renderer.as_ref().unwrap();
                 let model = Mat4::identity();
-                renderer.draw_cube(
+                let monkey_model = load_monkey();
+
+                renderer.draw_model(
+                    monkey_model,
                     model.into(),
                     self.camera.as_ref().unwrap().get_view_matrix(),
                     self.camera.as_ref().unwrap().get_projection_matrix(),
