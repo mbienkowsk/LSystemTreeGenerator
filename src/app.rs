@@ -118,6 +118,10 @@ impl ApplicationHandler for App {
 impl App {
     #[allow(clippy::cast_possible_truncation)]
     fn handle_mouse_movement(&mut self, delta: (f64, f64)) {
+        if self.interaction_mode != AppInteractionMode::CameraControl {
+            return;
+        }
+
         if let Some(camera) = self.camera.as_mut() {
             let (delta_x, delta_y) = delta;
             camera.handle_mouse_movement(delta_x as f32, delta_y as f32);
@@ -137,6 +141,10 @@ impl App {
     }
 
     fn handle_movement(&mut self) {
+        if self.interaction_mode != AppInteractionMode::CameraControl {
+            return;
+        }
+
         #[rustfmt::skip]
         let bindings: HashMap<Vec<KeyCode>, MovementDirection> = HashMap::from([
             (vec![KeyCode::KeyW, KeyCode::KeyK], MovementDirection::Forward),

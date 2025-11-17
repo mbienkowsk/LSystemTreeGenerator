@@ -28,7 +28,7 @@ impl GuiController {
             model_selection: ModelSelection::Monkey,
         }
     }
-    
+
     pub fn get_model_selection(&self) -> &ModelSelection {
         &self.model_selection
     }
@@ -39,7 +39,7 @@ impl GuiController {
 
     pub fn draw_ui(&mut self, window: &Window) {
         self.egui_glium.run(window, |ctx| {
-            egui::Window::new("my_side_panel").show(ctx, |ui| {
+            egui::Window::new("Control panel").show(ctx, |ui| {
                 ui.heading("Hello World!");
                 if ui.button("Click").clicked() {
                     log::info!("Clicked button")
