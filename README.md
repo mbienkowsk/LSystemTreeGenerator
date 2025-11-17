@@ -19,5 +19,5 @@ W tym celu należy zaimplementować:
 5. możliwość generacji roślin:
    - możliwość wyboru 3 różnych predefiniowanych roślin
    - możliwość podania swoich zasad generacji
-   - rozsiewanie modeli w zadanym obszarze - należy pamiętać, o trans-formacjach, żeby roślinność nie wyglądała zbyt sztucznie
+   - rozsiewanie modeli w zadanym obszarze - należy pamiętać, o transformacjach, żeby roślinność nie wyglądała zbyt sztucznie
 6. zmienny kolor rośliny w zależności od jej wysokości
