@@ -1,8 +1,8 @@
 use tobj::Model;
 
-pub fn load_monkey() -> Model {
+fn load_obj_file(path: &str) -> Model {
     let (models, _) = tobj::load_obj(
-        "assets/models/monkey.obj",
+        path,
         &tobj::LoadOptions {
             single_index: true,
             triangulate: true,
@@ -10,36 +10,20 @@ pub fn load_monkey() -> Model {
         },
     )
     .unwrap();
-    assert_eq!(models.len(), 1, "Expected exactly one model in monkey.obj");
-    models.first().expect("Expected monkey model").clone()
+    assert_eq!(models.len(), 1, "Expected exactly one model in {}", path);
+    models.first().expect("Expected model").clone()
+}
+
+pub fn load_monkey() -> Model {
+    load_obj_file("assets/models/monkey.obj")
 }
 
 pub fn load_cone() -> Model {
-    let (models, _) = tobj::load_obj(
-        "assets/models/cone.obj",
-        &tobj::LoadOptions {
-            single_index: true,
-            triangulate: true,
-            ..Default::default()
-        },
-    )
-    .unwrap();
-    assert_eq!(models.len(), 1, "Expected exactly one model in cone.obj");
-    models.first().expect("Expected cone model").clone()
+    load_obj_file("assets/models/cone.obj")
 }
 
 pub fn load_floor() -> Model {
-    let (models, _) = tobj::load_obj(
-        "assets/models/floor.obj",
-        &tobj::LoadOptions {
-            single_index: true,
-            triangulate: true,
-            ..Default::default()
-        },
-    )
-    .unwrap();
-    assert_eq!(models.len(), 1, "Expected exactly one model in floor.obj");
-    models.first().expect("Expected floor model").clone()
+    load_obj_file("assets/models/floor.obj")
 }
 
 #[cfg(test)]
