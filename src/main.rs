@@ -9,6 +9,7 @@ mod model_loader;
 mod renderer;
 mod shaders;
 mod lsystem;
+mod turtle;
 
 fn main() {
     env_logger::init();
