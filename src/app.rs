@@ -18,7 +18,7 @@ use winit::{
 const DELTA_TIME: f32 = 0.1;
 
 use crate::gui::GuiController;
-use crate::model_loader::load_monkey;
+use crate::model_loader::{load_cone, load_floor, load_monkey};
 use crate::{
     camera::{FlyCamera, MovementDirection},
     renderer::Renderer,
@@ -49,7 +49,7 @@ impl ApplicationHandler for App {
             glm::vec3(0.0, 0.0, 5.0),
             self.renderer.as_ref().unwrap().get_aspect_ratio(),
         ));
-        self.models = vec![load_monkey()];
+        self.models = vec![load_monkey(), load_cone(), load_floor()];
     }
 
     fn window_event(
@@ -149,13 +149,16 @@ impl App {
         let renderer = self.renderer.as_mut().unwrap();
         let model_matrix = Mat4::identity();
 
-        for model in &self.models {
-            renderer.draw_model(
-                model,
-                model_matrix.into(),
-                self.camera.as_ref().unwrap().get_view_matrix(),
-                self.camera.as_ref().unwrap().get_projection_matrix(),
-            );
-        }
+        let model = match renderer.gui.get_model_selection() {
+            crate::gui::ModelSelection::Monkey => &self.models[0],
+            crate::gui::ModelSelection::Cone => &self.models[1],
+        };
+
+        renderer.draw_model(
+            model,
+            model_matrix.into(),
+            self.camera.as_ref().unwrap().get_view_matrix(),
+            self.camera.as_ref().unwrap().get_projection_matrix(),
+        );
     }
 }

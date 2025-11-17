@@ -28,6 +28,10 @@ impl GuiController {
             model_selection: ModelSelection::Monkey,
         }
     }
+    
+    pub fn get_model_selection(&self) -> &ModelSelection {
+        &self.model_selection
+    }
 
     pub fn handle_event(&mut self, event: &WindowEvent, window: &Window) {
         let _ = self.egui_glium.on_event(window, event);
