@@ -11,18 +11,15 @@ struct TurtleState {
 }
 
 impl TurtleInterpreter {
-    pub fn new() -> Self {
-        Self {}
-    }
-
-    fn validate_input(&self, input: &str) -> bool {
+    fn validate_input(input: &str) -> bool {
         input.chars().all(|c| ALLOWED_SYMBOLS.contains(&c))
     }
 
-    pub fn interpret(&self, lsystem: &str, angle: f32) -> Vec<glm::Mat4> {
-        if !self.validate_input(lsystem) {
-            panic!("Input contains invalid symbols");
-        }
+    pub fn interpret(lsystem: &str, angle: f32) -> Vec<glm::Mat4> {
+        assert!(
+            Self::validate_input(lsystem),
+            "Input contains invalid symbols"
+        );
 
         let mut transformations: Vec<glm::Mat4> = Vec::new();
         let mut state_stack: Vec<TurtleState> = Vec::new();

@@ -1,16 +1,16 @@
 use crate::app::AppInteractionMode;
 use crate::gui::GuiController;
+use crate::lsystem::LSystem;
 use crate::shaders::make_shader_program;
+use crate::turtle::TurtleInterpreter;
 use glium::glutin::surface::WindowSurface;
 use glium::{
-    Depth, DepthTest, Display, DrawParameters, Frame, Program, Surface, implement_vertex, uniform,
+    implement_vertex, uniform, Depth, DepthTest, Display, DrawParameters, Frame, Program, Surface,
 };
-use glm::{Mat3, Mat4};
+use glm::Mat3;
 use tobj::Model;
 use winit::event_loop::ActiveEventLoop;
 use winit::window::Window;
-use crate::lsystem::LSystem;
-use crate::turtle::TurtleInterpreter;
 
 pub struct Renderer {
     window: Window,
@@ -86,11 +86,9 @@ impl Renderer {
         production_rules.insert('F', "F[+F]F[-F]F".to_string());
         let lsystem = LSystem::new(axiom, production_rules);
         let lsystem_string = lsystem.generate(3);
-        let turtle = TurtleInterpreter::new();
-        let transformations = turtle.interpret(&lsystem_string, 15.0);
+        let transformations = TurtleInterpreter::interpret(&lsystem_string, 15.0);
 
-
-        for model_matrix in transformations.into_iter() {
+        for model_matrix in transformations {
             self.draw_model(
                 &mut frame,
                 base,

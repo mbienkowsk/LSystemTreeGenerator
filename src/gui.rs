@@ -1,7 +1,7 @@
 use egui_glium::EguiGlium;
 use egui_glium::egui_winit::egui::ViewportId;
-use glium::{Display, Frame};
 use glium::glutin::surface::WindowSurface;
+use glium::{Display, Frame};
 use log::info;
 use winit::event::WindowEvent;
 use winit::event_loop::ActiveEventLoop;
@@ -63,7 +63,7 @@ impl GuiController {
             });
         });
     }
-    
+
     pub fn draw(&mut self, window: &Window, display: &Display<WindowSurface>, frame: &mut Frame) {
         self.ui_components(window);
         self.egui_glium.paint(display, frame);
