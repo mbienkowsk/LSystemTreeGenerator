@@ -46,16 +46,11 @@ impl GuiController {
         window: &Window,
         event_loop: &ActiveEventLoop,
     ) -> Self {
-
         Self {
             egui_glium: EguiGlium::new(ViewportId::ROOT, display, window, event_loop),
             model_selection: ModelSelection::Monkey,
             lsystem_config: LSystemConfig::default(),
         }
-    }
-
-    pub fn get_model_selection(&self) -> &ModelSelection {
-        &self.model_selection
     }
 
     pub fn get_lsystem_config(&self) -> &LSystemConfig {
@@ -81,12 +76,12 @@ impl GuiController {
         });
     }
 
-    fn ui_lsystem_config(
-        lsystem_config: &mut LSystemConfig,
-        ctx: &Context,
-    ) {
+    fn ui_lsystem_config(lsystem_config: &mut LSystemConfig, ctx: &Context) {
         egui::Window::new("LSystem Configuration").show(ctx, |ui| {
-            ui.add(egui::Slider::new(&mut lsystem_config.n_iterations, 0..=6).text("Number of Iterations"));
+            ui.add(
+                egui::Slider::new(&mut lsystem_config.n_iterations, 0..=6)
+                    .text("Number of Iterations"),
+            );
             ui.add(egui::Slider::new(&mut lsystem_config.angle, 0.0..=45.0).text("Angle"));
             ui.label(format!("{:?}", lsystem_config.axiom));
             ui.label("Production Rules:");

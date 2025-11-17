@@ -14,6 +14,7 @@ use winit::{
 // TODO: this could probably be calculated based on time since last frame instead
 const DELTA_TIME: f32 = 0.1;
 
+use crate::gui::LSystemConfig;
 use crate::lsystem::LSystem;
 use crate::model_loader::{load_cone, load_cylinder, load_floor, load_monkey};
 use crate::turtle::TurtleInterpreter;
@@ -21,7 +22,6 @@ use crate::{
     camera::{FlyCamera, MovementDirection},
     renderer::Renderer,
 };
-use crate::gui::LSystemConfig;
 
 #[derive(Default, Debug, PartialEq)]
 pub enum AppInteractionMode {
@@ -61,7 +61,7 @@ impl ApplicationHandler for App {
 
         // TODO recalculate transformations when parameters of L-system change
         self.lsystem_config = Some(self.get_current_lsystem_config().clone());
-        self.calculate_transformations()
+        self.calculate_transformations();
     }
 
     fn window_event(
@@ -91,7 +91,7 @@ impl ApplicationHandler for App {
 
                 let new_lsystem_config = self.get_current_lsystem_config();
                 if new_lsystem_config != self.lsystem_config.as_ref().unwrap() {
-                    log::info!("L-System config changed to {:?}", new_lsystem_config);
+                    log::info!("L-System config changed to {new_lsystem_config:?}");
                     self.lsystem_config = Some(new_lsystem_config.clone());
                     self.calculate_transformations();
                 }
@@ -194,11 +194,6 @@ impl App {
         let renderer = self.renderer.as_mut().unwrap();
 
         // TODO some reasonable base models for L-systems
-        // let model = match renderer.gui.get_model_selection() {
-        //     crate::gui::ModelSelection::Monkey => &self.models[0],
-        //     crate::gui::ModelSelection::Cone => &self.models[1],
-        // };
-
         let model = &self.models[3];
 
         renderer.render_scene(
@@ -214,11 +209,8 @@ impl App {
         let gui = &self.renderer.as_ref().unwrap().gui;
         let lsystem_config = gui.get_lsystem_config();
 
-        let production_rules: HashMap<char, String> = lsystem_config
-            .production_rules
-            .iter()
-            .cloned()
-            .collect();
+        let production_rules: HashMap<char, String> =
+            lsystem_config.production_rules.iter().cloned().collect();
         let lsystem = LSystem::new(&lsystem_config.axiom, production_rules);
         let generated_string = lsystem.generate(lsystem_config.n_iterations);
         let transformations = TurtleInterpreter::interpret(&generated_string, lsystem_config.angle);
