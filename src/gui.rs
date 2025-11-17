@@ -76,7 +76,7 @@ impl GuiController {
                 info!("Clicked button");
             }
             egui::ComboBox::from_label("Selected Model")
-                .selected_text(format!("{:?}", model_selection))
+                .selected_text(format!("{model_selection:?}"))
                 .show_ui(ui, |ui| {
                     ui.selectable_value(model_selection, ModelSelection::Monkey, "Monkey");
                     ui.selectable_value(model_selection, ModelSelection::Cone, "Cone");
@@ -94,11 +94,11 @@ impl GuiController {
         egui::Window::new("LSystem Configuration").show(ctx, |ui| {
             ui.add(egui::Slider::new(n_iterations, 0..=6).text("Number of Iterations"));
             ui.add(egui::Slider::new(angle, 0.0..=45.0).text("Angle"));
-            ui.label(format!("{:?}", axiom));
+            ui.label(format!("{axiom:?}"));
             ui.label("Production Rules:");
             for (i, (symbol, replacement)) in production_rules.iter().enumerate() {
                 ui.horizontal(|ui| {
-                    ui.label(format!("{}: {} -> {}", i, symbol, replacement));
+                    ui.label(format!("{i}: {symbol} -> {replacement}"));
                 });
             }
         });

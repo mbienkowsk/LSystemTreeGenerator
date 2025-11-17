@@ -1,8 +1,8 @@
 use crate::app::AppInteractionMode;
 use crate::gui::GuiController;
-use crate::lsystem::LSystem;
+
 use crate::shaders::make_shader_program;
-use crate::turtle::TurtleInterpreter;
+
 use glium::glutin::surface::WindowSurface;
 use glium::{
     Depth, DepthTest, Display, DrawParameters, Frame, Program, Surface, implement_vertex, uniform,
