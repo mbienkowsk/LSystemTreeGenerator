@@ -6,22 +6,33 @@ use glium::{
 use glm::Mat3;
 use tobj::Model;
 use winit::window::Window;
+use crate::gui::GuiRenderer;
 
 pub struct Renderer {
     window: Window,
     display: Display<WindowSurface>,
     program: Program,
+    pub gui: GuiRenderer,
 }
 
 impl Renderer {
-    pub fn new(window: Window, display: Display<WindowSurface>) -> Self {
+    pub fn new(window: Window, display: Display<WindowSurface>, gui_renderer: GuiRenderer) -> Self {
         let program = make_shader_program(&display).expect("Failed to create shader program");
 
         Renderer {
             window,
             display,
             program,
+            gui: gui_renderer,
         }
+    }
+
+    pub fn get_window(&self) -> &Window {
+        &self.window
+    }
+
+    pub fn get_display(&self) -> &Display<WindowSurface> {
+        &self.display
     }
 
     pub fn requrest_redraw(&self) {
@@ -32,8 +43,12 @@ impl Renderer {
         self.display.resize(new_size);
     }
 
+    pub fn handle_gui_event(&mut self, event: &winit::event::WindowEvent) {
+        self.gui.handle_event(event, &self.window);
+    }
+    
     pub fn draw(
-        &self,
+        &mut self,
         vertices: &[Vertex],
         indices: &[u16],
         model_matrix: [[f32; 4]; 4],
@@ -68,11 +83,13 @@ impl Renderer {
                 &params,
             )
             .expect("Failed to draw frame");
+    self.gui.draw_ui(&self.display, &self.window);
+        self.gui.egui_glium.paint(&self.display, &mut frame);
         frame.finish().expect("Failed to destroy frame");
     }
 
     pub fn draw_model(
-        &self,
+        &mut self,
         model: &Model,
         model_matrix: [[f32; 4]; 4],
         view_matrix: [[f32; 4]; 4],

@@ -1,6 +1,6 @@
-use std::collections::{HashMap, HashSet};
 use egui_glium::egui_winit::egui::ViewportId;
 use egui_glium::EguiGlium;
+use std::collections::{HashMap, HashSet};
 use winit::window::CursorGrabMode;
 
 use glium::backend::glutin::SimpleWindowBuilder;
@@ -17,12 +17,12 @@ use winit::{
 // TODO: this could probably be calculated based on time since last frame instead
 const DELTA_TIME: f32 = 0.1;
 
+use crate::gui::GuiRenderer;
 use crate::model_loader::load_monkey;
 use crate::{
     camera::{FlyCamera, MovementDirection},
     renderer::Renderer,
 };
-use crate::gui::GuiRenderer;
 
 #[derive(Default)]
 pub struct App {
@@ -30,7 +30,6 @@ pub struct App {
     camera: Option<FlyCamera>,
     pressed_keys: HashSet<KeyCode>,
     models: Vec<Model>,
-    gui_renderer: Option<GuiRenderer>,
 }
 
 impl ApplicationHandler for App {
@@ -39,13 +38,13 @@ impl ApplicationHandler for App {
             .with_title("L-System generator")
             .build(event_loop);
 
-        if let Err(e) = window.set_cursor_grab(CursorGrabMode::Confined) {
-            log::warn!("Could not grab cursor: {e:?}");
-        }
-        window.set_cursor_visible(false);
+        // if let Err(e) = window.set_cursor_grab(CursorGrabMode::Confined) {
+        //     log::warn!("Could not grab cursor: {e:?}");
+        // }
+        // window.set_cursor_visible(false);
 
-        self.gui_renderer = Some(GuiRenderer::new(&display, &window, &event_loop));
-        self.renderer = Some(Renderer::new(window, display));
+        let gui_renderer = GuiRenderer::new(&display, &window, &event_loop);
+        self.renderer = Some(Renderer::new(window, display, gui_renderer));
         self.camera = Some(FlyCamera::new(
             glm::vec3(0.0, 0.0, 5.0),
             self.renderer.as_ref().unwrap().get_aspect_ratio(),
@@ -59,6 +58,10 @@ impl ApplicationHandler for App {
         _window_id: WindowId,
         event: WindowEvent,
     ) {
+        if let Some(mut renderer) = self.renderer.as_mut() {
+            renderer.handle_gui_event(&event);
+        }
+
         match event {
             WindowEvent::Resized(window_size) => {
                 if let Some(renderer) = &self.renderer {
@@ -143,7 +146,7 @@ impl App {
     }
 
     fn render_scene(&mut self) {
-        let renderer = self.renderer.as_ref().unwrap();
+        let renderer = self.renderer.as_mut().unwrap();
         let model_matrix = Mat4::identity();
 
         for model in &self.models {
