@@ -8,6 +8,7 @@ mod gui;
 mod model_loader;
 mod renderer;
 mod shaders;
+mod lsystem;
 
 fn main() {
     env_logger::init();
