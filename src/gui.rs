@@ -25,7 +25,7 @@ impl GuiRenderer {
         let _ = self.egui_glium.on_event(window, event);
     }
 
-    pub fn draw_ui(&mut self, display: &Display<WindowSurface>, window: &Window) {
+    pub fn draw_ui(&mut self, window: &Window) {
         self.egui_glium.run(window, |ctx| {
             egui::Window::new("my_side_panel").show(ctx, |ui| {
                 ui.heading("Hello World!");

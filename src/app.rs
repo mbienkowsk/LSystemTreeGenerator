@@ -58,7 +58,7 @@ impl ApplicationHandler for App {
         _window_id: WindowId,
         event: WindowEvent,
     ) {
-        if let Some(mut renderer) = self.renderer.as_mut() {
+        if let Some(renderer) = self.renderer.as_mut() {
             renderer.handle_gui_event(&event);
         }
 

@@ -1,12 +1,12 @@
+use crate::gui::GuiRenderer;
 use crate::shaders::make_shader_program;
 use glium::glutin::surface::WindowSurface;
 use glium::{
-    Depth, DepthTest, Display, DrawParameters, Program, Surface, implement_vertex, uniform,
+    implement_vertex, uniform, Depth, DepthTest, Display, DrawParameters, Program, Surface,
 };
 use glm::Mat3;
 use tobj::Model;
 use winit::window::Window;
-use crate::gui::GuiRenderer;
 
 pub struct Renderer {
     window: Window,
@@ -27,14 +27,6 @@ impl Renderer {
         }
     }
 
-    pub fn get_window(&self) -> &Window {
-        &self.window
-    }
-
-    pub fn get_display(&self) -> &Display<WindowSurface> {
-        &self.display
-    }
-
     pub fn requrest_redraw(&self) {
         self.window.request_redraw();
     }
@@ -46,7 +38,7 @@ impl Renderer {
     pub fn handle_gui_event(&mut self, event: &winit::event::WindowEvent) {
         self.gui.handle_event(event, &self.window);
     }
-    
+
     pub fn draw(
         &mut self,
         vertices: &[Vertex],
@@ -83,7 +75,7 @@ impl Renderer {
                 &params,
             )
             .expect("Failed to draw frame");
-    self.gui.draw_ui(&self.display, &self.window);
+        self.gui.draw_ui(&self.window);
         self.gui.egui_glium.paint(&self.display, &mut frame);
         frame.finish().expect("Failed to destroy frame");
     }
