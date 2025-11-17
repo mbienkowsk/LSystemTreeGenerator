@@ -1,10 +1,9 @@
+use crate::app::AppInteractionMode;
 use crate::gui::GuiController;
 use crate::shaders::make_shader_program;
 use glium::glutin::surface::WindowSurface;
-use glium::{
-    implement_vertex, uniform, Depth, DepthTest, Display, DrawParameters, Program, Surface,
-};
-use glm::Mat3;
+use glium::{implement_vertex, uniform, Depth, DepthTest, Display, DrawParameters, Frame, Program, Surface};
+use glm::{Mat3, Mat4};
 use tobj::Model;
 use winit::window::Window;
 
@@ -16,7 +15,11 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    pub fn new(window: Window, display: Display<WindowSurface>, gui_renderer: GuiController) -> Self {
+    pub fn new(
+        window: Window,
+        display: Display<WindowSurface>,
+        gui_renderer: GuiController,
+    ) -> Self {
         let program = make_shader_program(&display).expect("Failed to create shader program");
 
         Renderer {
@@ -38,17 +41,64 @@ impl Renderer {
     pub fn handle_gui_event(&mut self, event: &winit::event::WindowEvent) {
         self.gui.handle_event(event, &self.window);
     }
+    
+    pub fn handle_interaction_mode_change(&mut self, mode: &AppInteractionMode) {
+        match mode {
+            AppInteractionMode::CameraControl => {
+                if let Err(e) = self.window.set_cursor_grab(winit::window::CursorGrabMode::Confined) {
+                    log::warn!("Could not grab cursor: {e:?}");
+                }
+                self.window.set_cursor_visible(false);
+            }
+            AppInteractionMode::GuiInteraction => {
+                if let Err(e) = self.window.set_cursor_grab(winit::window::CursorGrabMode::None) {
+                    log::warn!("Could not release cursor: {e:?}");
+                }
+                self.window.set_cursor_visible(true);
+            }
+        }
+    }
 
-    pub fn draw(
+    pub fn render_scene(
         &mut self,
-        vertices: &[Vertex],
-        indices: &[u16],
-        model_matrix: [[f32; 4]; 4],
+        objects: &[Model],
+        interaction_mode: &AppInteractionMode,
         view_matrix: [[f32; 4]; 4],
         projection_matrix: [[f32; 4]; 4],
     ) {
         let mut frame = self.display.draw();
         frame.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
+
+        let model_matrix = Mat4::identity();
+
+        for object in objects {
+            self.draw_model(
+                &mut frame,
+                &object,
+                model_matrix.into(),
+                view_matrix,
+                projection_matrix,
+            )
+        }
+
+        if *interaction_mode == AppInteractionMode::GuiInteraction {
+            self.gui.draw_ui(&self.window);
+            self.gui.egui_glium.paint(&self.display, &mut frame);
+        }
+
+        frame.finish().expect("Failed to destroy frame");
+    }
+
+
+    pub fn draw_model(
+        &mut self,
+        frame: &mut Frame,
+        model: &Model, 
+        model_matrix: [[f32; 4]; 4],
+        view_matrix: [[f32; 4]; 4],
+        projection_matrix: [[f32; 4]; 4],
+    ) {
+        let (vertices, indices) = Self::model_to_vertices_and_indices(model);
         let model_mat3 = Mat3::from_fn(|r, c| model_matrix[r][c]);
         let normal_matrix: [[f32; 3]; 3] = glm::inverse_transpose(model_mat3).into();
 
@@ -63,38 +113,18 @@ impl Renderer {
 
         frame
             .draw(
-                &glium::VertexBuffer::new(&self.display, vertices).unwrap(),
+                &glium::VertexBuffer::new(&self.display, &vertices).unwrap(),
                 &glium::IndexBuffer::new(
                     &self.display,
                     glium::index::PrimitiveType::TrianglesList,
-                    indices,
+                    &indices,
                 )
-                .unwrap(),
+                    .unwrap(),
                 &self.program,
                 &uniform! {model: model_matrix, view: view_matrix, projection: projection_matrix, normal_matrix: normal_matrix},
                 &params,
             )
             .expect("Failed to draw frame");
-        self.gui.draw_ui(&self.window);
-        self.gui.egui_glium.paint(&self.display, &mut frame);
-        frame.finish().expect("Failed to destroy frame");
-    }
-
-    pub fn draw_model(
-        &mut self,
-        model: &Model,
-        model_matrix: [[f32; 4]; 4],
-        view_matrix: [[f32; 4]; 4],
-        projection_matrix: [[f32; 4]; 4],
-    ) {
-        let (vertices, indices) = Self::model_to_vertices_and_indices(model);
-        self.draw(
-            &vertices,
-            &indices,
-            model_matrix,
-            view_matrix,
-            projection_matrix,
-        );
     }
 
     fn model_to_vertices_and_indices(model: &Model) -> (Vec<Vertex>, Vec<u16>) {

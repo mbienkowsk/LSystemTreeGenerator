@@ -24,12 +24,20 @@ use crate::{
     renderer::Renderer,
 };
 
+#[derive(Default, Debug, PartialEq)]
+pub enum AppInteractionMode {
+    #[default]
+    CameraControl,
+    GuiInteraction,
+}
+
 #[derive(Default)]
 pub struct App {
     renderer: Option<Renderer>,
     camera: Option<FlyCamera>,
     pressed_keys: HashSet<KeyCode>,
     models: Vec<Model>,
+    interaction_mode: AppInteractionMode,
 }
 
 impl ApplicationHandler for App {
@@ -38,10 +46,6 @@ impl ApplicationHandler for App {
             .with_title("L-System generator")
             .build(event_loop);
 
-        // if let Err(e) = window.set_cursor_grab(CursorGrabMode::Confined) {
-        //     log::warn!("Could not grab cursor: {e:?}");
-        // }
-        // window.set_cursor_visible(false);
 
         let gui_renderer = GuiController::new(&display, &window, &event_loop);
         self.renderer = Some(Renderer::new(window, display, gui_renderer));
@@ -50,6 +54,11 @@ impl ApplicationHandler for App {
             self.renderer.as_ref().unwrap().get_aspect_ratio(),
         ));
         self.models = vec![load_monkey(), load_cone(), load_floor()];
+
+        self.renderer
+            .as_mut()
+            .unwrap()
+            .handle_interaction_mode_change(&self.interaction_mode);
     }
 
     fn window_event(
@@ -77,6 +86,7 @@ impl ApplicationHandler for App {
                     return;
                 }
 
+                self.handle_ui_control();
                 self.render_scene();
                 self.handle_movement();
             }
@@ -145,20 +155,35 @@ impl App {
         }
     }
 
+    fn handle_ui_control(&mut self) {
+        if self.pressed_keys.contains(&KeyCode::Escape) {
+            match self.interaction_mode {
+                AppInteractionMode::CameraControl => {
+                    self.interaction_mode = AppInteractionMode::GuiInteraction;
+                }
+                AppInteractionMode::GuiInteraction => {
+                    self.interaction_mode = AppInteractionMode::CameraControl;
+                }
+            }
+            self.renderer.as_mut().unwrap().handle_interaction_mode_change(&self.interaction_mode);
+        }
+    }
+
     fn render_scene(&mut self) {
         let renderer = self.renderer.as_mut().unwrap();
-        let model_matrix = Mat4::identity();
+
 
         let model = match renderer.gui.get_model_selection() {
             crate::gui::ModelSelection::Monkey => &self.models[0],
             crate::gui::ModelSelection::Cone => &self.models[1],
         };
 
-        renderer.draw_model(
-            model,
-            model_matrix.into(),
-            self.camera.as_ref().unwrap().get_view_matrix(),
-            self.camera.as_ref().unwrap().get_projection_matrix(),
-        );
+        renderer.render_scene(
+            std::slice::from_ref(model),
+            &self.interaction_mode,
+            self.camera.as_ref().unwrap().get_view_matrix().into(),
+            self.camera.as_ref().unwrap().get_projection_matrix().into(),
+        )
+
     }
 }
