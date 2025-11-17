@@ -83,7 +83,7 @@ impl Renderer {
 
         let axiom = "F";
         let mut production_rules = std::collections::HashMap::new();
-        production_rules.insert('F', "F+F--F+F".to_string());
+        production_rules.insert('F', "F[+F]F[-F]F".to_string());
         let lsystem = LSystem::new(axiom, production_rules);
         let lsystem_string = lsystem.generate(3);
         let turtle = TurtleInterpreter::new();
