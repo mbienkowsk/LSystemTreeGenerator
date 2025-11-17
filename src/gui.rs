@@ -27,7 +27,7 @@ impl GuiRenderer {
 
     pub fn draw_ui(&mut self, display: &Display<WindowSurface>, window: &Window) {
         self.egui_glium.run(window, |ctx| {
-            egui::SidePanel::left("my_side_panel").show(ctx, |ui| {
+            egui::Window::new("my_side_panel").show(ctx, |ui| {
                 ui.heading("Hello World!");
                 if ui.button("Click").clicked() {
                     log::info!("Clicked button")
