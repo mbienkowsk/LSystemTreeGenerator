@@ -10,7 +10,7 @@ fn load_obj_file(path: &str) -> Model {
         },
     )
     .unwrap();
-    assert_eq!(models.len(), 1, "Expected exactly one model in {}", path);
+    assert_eq!(models.len(), 1, "Expected exactly one model in {path}");
     models.first().expect("Expected model").clone()
 }
 
