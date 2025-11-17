@@ -88,7 +88,7 @@ impl Renderer {
                 model_matrix.into(),
                 view_matrix,
                 projection_matrix,
-            )
+            );
         }
 
         if *interaction_mode == AppInteractionMode::GuiInteraction {
@@ -136,7 +136,7 @@ impl Renderer {
             .expect("Failed to draw frame");
     }
 
-    fn model_to_vertices_and_indices(model: &Model) -> (Vec<Vertex>, Vec<u16>) {
+    fn model_to_vertices_and_indices(model: &Model) -> (Vec<Vertex>, Vec<u32>) {
         let mesh = &model.mesh;
         let positions = &mesh.positions;
         let normals = &mesh.normals;
@@ -152,9 +152,7 @@ impl Renderer {
             })
             .collect();
 
-        let indices: Vec<u16> = mesh.indices.iter().map(|&i| i as u16).collect();
-
-        (vertices, indices)
+        (vertices, mesh.indices.clone())
     }
 
     #[allow(clippy::cast_precision_loss)]
