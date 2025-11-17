@@ -1,4 +1,6 @@
 use std::collections::{HashMap, HashSet};
+use egui_glium::egui_winit::egui::ViewportId;
+use egui_glium::EguiGlium;
 use winit::window::CursorGrabMode;
 
 use glium::backend::glutin::SimpleWindowBuilder;
@@ -20,6 +22,7 @@ use crate::{
     camera::{FlyCamera, MovementDirection},
     renderer::Renderer,
 };
+use crate::gui::GuiRenderer;
 
 #[derive(Default)]
 pub struct App {
@@ -27,6 +30,7 @@ pub struct App {
     camera: Option<FlyCamera>,
     pressed_keys: HashSet<KeyCode>,
     models: Vec<Model>,
+    gui_renderer: Option<GuiRenderer>,
 }
 
 impl ApplicationHandler for App {
@@ -40,6 +44,7 @@ impl ApplicationHandler for App {
         }
         window.set_cursor_visible(false);
 
+        self.gui_renderer = Some(GuiRenderer::new(&display, &window, &event_loop));
         self.renderer = Some(Renderer::new(window, display));
         self.camera = Some(FlyCamera::new(
             glm::vec3(0.0, 0.0, 5.0),
