@@ -28,95 +28,57 @@ pub fn load_floor() -> Model {
 
 #[cfg(test)]
 mod tests {
+    use tobj::Model;
     use crate::model_loader::load_monkey;
+
+    fn display_model_info(model: &Model) {
+        println!("Model name: {}", model.name);
+        println!(
+            "Loaded model with {} positions",
+            model.mesh.positions.len()
+        );
+        println!(
+            "Loaded model with {} indices",
+            model.mesh.indices.len()
+        );
+        println!(
+            "Loaded model with {} normals",
+            model.mesh.normals.len()
+        );
+        println!(
+            "Loaded model with {} texcoords",
+            model.mesh.texcoords.len()
+        );
+    }
+
+    fn check_if_model_loaded_correctly(model: &Model) {
+        assert!(!model.mesh.positions.is_empty());
+        assert!(!model.mesh.normals.is_empty());
+        assert_eq!(
+            model.mesh.positions.len(),
+            model.mesh.normals.len()
+        );
+    }
 
     #[test]
     fn monkey_loads_correctly() {
         let monkey_model = load_monkey();
 
-        println!("Model name: {}", monkey_model.name);
-        println!(
-            "Loaded monkey model with {} positions",
-            monkey_model.mesh.positions.len()
-        );
-        println!(
-            "Loaded monkey model with {} indices",
-            monkey_model.mesh.indices.len()
-        );
-        println!(
-            "Loaded monkey model with {} normals",
-            monkey_model.mesh.normals.len()
-        );
-        println!(
-            "Loaded monkey model with {} texcoords",
-            monkey_model.mesh.texcoords.len()
-        );
-
-        assert!(!monkey_model.mesh.positions.is_empty());
-        assert!(!monkey_model.mesh.normals.is_empty());
-        assert_eq!(
-            monkey_model.mesh.positions.len(),
-            monkey_model.mesh.normals.len()
-        );
+        display_model_info(&monkey_model);
+        check_if_model_loaded_correctly(&monkey_model);
     }
 
     #[test]
     fn cone_loads_correctly() {
         let cone_model = crate::model_loader::load_cone();
-
-        println!("Model name: {}", cone_model.name);
-        println!(
-            "Loaded cone model with {} positions",
-            cone_model.mesh.positions.len()
-        );
-        println!(
-            "Loaded cone model with {} indices",
-            cone_model.mesh.indices.len()
-        );
-        println!(
-            "Loaded cone model with {} normals",
-            cone_model.mesh.normals.len()
-        );
-        println!(
-            "Loaded cone model with {} texcoords",
-            cone_model.mesh.texcoords.len()
-        );
-
-        assert!(!cone_model.mesh.positions.is_empty());
-        assert!(!cone_model.mesh.normals.is_empty());
-        assert_eq!(
-            cone_model.mesh.positions.len(),
-            cone_model.mesh.normals.len()
-        );
+        display_model_info(&cone_model);
+        check_if_model_loaded_correctly(&cone_model);
     }
 
     #[test]
     fn floor_loads_correctly() {
         let floor_model = crate::model_loader::load_floor();
-
-        println!("Model name: {}", floor_model.name);
-        println!(
-            "Loaded floor model with {} positions",
-            floor_model.mesh.positions.len()
-        );
-        println!(
-            "Loaded floor model with {} indices",
-            floor_model.mesh.indices.len()
-        );
-        println!(
-            "Loaded floor model with {} normals",
-            floor_model.mesh.normals.len()
-        );
-        println!(
-            "Loaded floor model with {} texcoords",
-            floor_model.mesh.texcoords.len()
-        );
-
-        assert!(!floor_model.mesh.positions.is_empty());
-        assert!(!floor_model.mesh.normals.is_empty());
-        assert_eq!(
-            floor_model.mesh.positions.len(),
-            floor_model.mesh.normals.len()
-        );
+        display_model_info(&floor_model);
+        check_if_model_loaded_correctly(&floor_model);
     }
 }
