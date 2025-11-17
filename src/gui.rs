@@ -6,11 +6,18 @@ use winit::event::WindowEvent;
 use winit::event_loop::ActiveEventLoop;
 use winit::window::Window;
 
-pub struct GuiRenderer {
+pub struct GuiController {
     pub egui_glium: EguiGlium,
+    model_selection: ModelSelection,
 }
 
-impl GuiRenderer {
+#[derive(Debug, PartialEq)]
+pub enum ModelSelection {
+    Monkey,
+    Cone,
+}
+
+impl GuiController {
     pub fn new(
         display: &Display<WindowSurface>,
         window: &Window,
@@ -18,6 +25,7 @@ impl GuiRenderer {
     ) -> Self {
         Self {
             egui_glium: EguiGlium::new(ViewportId::ROOT, display, window, event_loop),
+            model_selection: ModelSelection::Monkey,
         }
     }
 
@@ -32,8 +40,22 @@ impl GuiRenderer {
                 if ui.button("Click").clicked() {
                     log::info!("Clicked button")
                 }
-            });
 
+                egui::ComboBox::from_label("Selected Model")
+                    .selected_text(format!("{:?}", self.model_selection))
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(
+                            &mut self.model_selection,
+                            ModelSelection::Monkey,
+                            "Monkey",
+                        );
+                        ui.selectable_value(
+                            &mut self.model_selection,
+                            ModelSelection::Cone,
+                            "Cone",
+                        );
+                    })
+            });
         })
     }
 }

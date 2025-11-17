@@ -1,4 +1,4 @@
-use crate::gui::GuiRenderer;
+use crate::gui::GuiController;
 use crate::shaders::make_shader_program;
 use glium::glutin::surface::WindowSurface;
 use glium::{
@@ -12,11 +12,11 @@ pub struct Renderer {
     window: Window,
     display: Display<WindowSurface>,
     program: Program,
-    pub gui: GuiRenderer,
+    pub gui: GuiController,
 }
 
 impl Renderer {
-    pub fn new(window: Window, display: Display<WindowSurface>, gui_renderer: GuiRenderer) -> Self {
+    pub fn new(window: Window, display: Display<WindowSurface>, gui_renderer: GuiController) -> Self {
         let program = make_shader_program(&display).expect("Failed to create shader program");
 
         Renderer {

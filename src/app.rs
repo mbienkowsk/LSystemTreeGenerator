@@ -17,7 +17,7 @@ use winit::{
 // TODO: this could probably be calculated based on time since last frame instead
 const DELTA_TIME: f32 = 0.1;
 
-use crate::gui::GuiRenderer;
+use crate::gui::GuiController;
 use crate::model_loader::load_monkey;
 use crate::{
     camera::{FlyCamera, MovementDirection},
@@ -43,7 +43,7 @@ impl ApplicationHandler for App {
         // }
         // window.set_cursor_visible(false);
 
-        let gui_renderer = GuiRenderer::new(&display, &window, &event_loop);
+        let gui_renderer = GuiController::new(&display, &window, &event_loop);
         self.renderer = Some(Renderer::new(window, display, gui_renderer));
         self.camera = Some(FlyCamera::new(
             glm::vec3(0.0, 0.0, 5.0),
