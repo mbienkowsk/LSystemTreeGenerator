@@ -1,8 +1,6 @@
 use std::collections::{HashMap, HashSet};
-use winit::window::CursorGrabMode;
 
 use glium::backend::glutin::SimpleWindowBuilder;
-use glm::Mat4;
 use tobj::Model;
 use winit::{
     application::ApplicationHandler,
@@ -15,11 +13,18 @@ use winit::{
 // TODO: this could probably be calculated based on time since last frame instead
 const DELTA_TIME: f32 = 0.1;
 
-use crate::model_loader::load_monkey;
+use crate::model_loader::{load_cone, load_floor, load_monkey};
 use crate::{
     camera::{FlyCamera, MovementDirection},
     renderer::Renderer,
 };
+
+#[derive(Default, Debug, PartialEq)]
+pub enum AppInteractionMode {
+    #[default]
+    CameraControl,
+    GuiInteraction,
+}
 
 #[derive(Default)]
 pub struct App {
@@ -27,6 +32,7 @@ pub struct App {
     camera: Option<FlyCamera>,
     pressed_keys: HashSet<KeyCode>,
     models: Vec<Model>,
+    interaction_mode: AppInteractionMode,
 }
 
 impl ApplicationHandler for App {
@@ -35,17 +41,17 @@ impl ApplicationHandler for App {
             .with_title("L-System generator")
             .build(event_loop);
 
-        if let Err(e) = window.set_cursor_grab(CursorGrabMode::Confined) {
-            log::warn!("Could not grab cursor: {e:?}");
-        }
-        window.set_cursor_visible(false);
-
-        self.renderer = Some(Renderer::new(window, display));
+        self.renderer = Some(Renderer::new(window, display, event_loop));
         self.camera = Some(FlyCamera::new(
             glm::vec3(0.0, 0.0, 5.0),
             self.renderer.as_ref().unwrap().get_aspect_ratio(),
         ));
-        self.models = vec![load_monkey()];
+        self.models = vec![load_monkey(), load_cone(), load_floor()];
+
+        self.renderer
+            .as_mut()
+            .unwrap()
+            .handle_interaction_mode_change(&self.interaction_mode);
     }
 
     fn window_event(
@@ -54,6 +60,10 @@ impl ApplicationHandler for App {
         _window_id: WindowId,
         event: WindowEvent,
     ) {
+        if let Some(renderer) = self.renderer.as_mut() {
+            renderer.handle_gui_event(&event);
+        }
+
         match event {
             WindowEvent::Resized(window_size) => {
                 if let Some(renderer) = &self.renderer {
@@ -92,7 +102,7 @@ impl ApplicationHandler for App {
 
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
         if let Some(ref renderer) = self.renderer {
-            renderer.requrest_redraw();
+            renderer.request_redraw();
         }
     }
 }
@@ -100,6 +110,10 @@ impl ApplicationHandler for App {
 impl App {
     #[allow(clippy::cast_possible_truncation)]
     fn handle_mouse_movement(&mut self, delta: (f64, f64)) {
+        if self.interaction_mode != AppInteractionMode::CameraControl {
+            return;
+        }
+
         if let Some(camera) = self.camera.as_mut() {
             let (delta_x, delta_y) = delta;
             camera.handle_mouse_movement(delta_x as f32, delta_y as f32);
@@ -108,6 +122,9 @@ impl App {
 
     fn handle_key_event(&mut self, event: &KeyEvent) {
         match (event.state, event.physical_key) {
+            (ElementState::Pressed, PhysicalKey::Code(KeyCode::Escape)) => {
+                self.toggle_interaction_mode();
+            }
             (ElementState::Pressed, PhysicalKey::Code(code)) => {
                 self.pressed_keys.insert(code);
             }
@@ -119,6 +136,10 @@ impl App {
     }
 
     fn handle_movement(&mut self) {
+        if self.interaction_mode != AppInteractionMode::CameraControl {
+            return;
+        }
+
         #[rustfmt::skip]
         let bindings: HashMap<Vec<KeyCode>, MovementDirection> = HashMap::from([
             (vec![KeyCode::KeyW, KeyCode::KeyK], MovementDirection::Forward),
@@ -137,17 +158,34 @@ impl App {
         }
     }
 
-    fn render_scene(&mut self) {
-        let renderer = self.renderer.as_ref().unwrap();
-        let model_matrix = Mat4::identity();
-
-        for model in &self.models {
-            renderer.draw_model(
-                model,
-                model_matrix.into(),
-                self.camera.as_ref().unwrap().get_view_matrix(),
-                self.camera.as_ref().unwrap().get_projection_matrix(),
-            );
+    fn toggle_interaction_mode(&mut self) {
+        match self.interaction_mode {
+            AppInteractionMode::CameraControl => {
+                self.interaction_mode = AppInteractionMode::GuiInteraction;
+            }
+            AppInteractionMode::GuiInteraction => {
+                self.interaction_mode = AppInteractionMode::CameraControl;
+            }
         }
+        self.renderer
+            .as_mut()
+            .unwrap()
+            .handle_interaction_mode_change(&self.interaction_mode);
+    }
+
+    fn render_scene(&mut self) {
+        let renderer = self.renderer.as_mut().unwrap();
+
+        let model = match renderer.gui.get_model_selection() {
+            crate::gui::ModelSelection::Monkey => &self.models[0],
+            crate::gui::ModelSelection::Cone => &self.models[1],
+        };
+
+        renderer.render_scene(
+            std::slice::from_ref(model),
+            &self.interaction_mode,
+            self.camera.as_ref().unwrap().get_view_matrix(),
+            self.camera.as_ref().unwrap().get_projection_matrix(),
+        );
     }
 }
