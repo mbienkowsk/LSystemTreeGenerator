@@ -1,10 +1,6 @@
-use egui_glium::EguiGlium;
-use egui_glium::egui_winit::egui::ViewportId;
 use std::collections::{HashMap, HashSet};
-use winit::window::CursorGrabMode;
 
 use glium::backend::glutin::SimpleWindowBuilder;
-use glm::Mat4;
 use tobj::Model;
 use winit::{
     application::ApplicationHandler,
@@ -46,7 +42,7 @@ impl ApplicationHandler for App {
             .with_title("L-System generator")
             .build(event_loop);
 
-        let gui_renderer = GuiController::new(&display, &window, &event_loop);
+        let gui_renderer = GuiController::new(&display, &window, event_loop);
         self.renderer = Some(Renderer::new(window, display, gui_renderer));
         self.camera = Some(FlyCamera::new(
             glm::vec3(0.0, 0.0, 5.0),
@@ -190,8 +186,8 @@ impl App {
         renderer.render_scene(
             std::slice::from_ref(model),
             &self.interaction_mode,
-            self.camera.as_ref().unwrap().get_view_matrix().into(),
-            self.camera.as_ref().unwrap().get_projection_matrix().into(),
+            self.camera.as_ref().unwrap().get_view_matrix(),
+            self.camera.as_ref().unwrap().get_projection_matrix(),
         )
     }
 }

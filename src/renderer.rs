@@ -82,7 +82,7 @@ impl Renderer {
         for object in objects {
             self.draw_model(
                 &mut frame,
-                &object,
+                object,
                 model_matrix.into(),
                 view_matrix,
                 projection_matrix,
