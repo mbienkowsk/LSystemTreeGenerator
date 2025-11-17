@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-struct LSystem {
+pub struct LSystem {
     axiom: String,
     production_rules: HashMap<char, String>,
 }

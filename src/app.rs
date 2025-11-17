@@ -13,7 +13,7 @@ use winit::{
 // TODO: this could probably be calculated based on time since last frame instead
 const DELTA_TIME: f32 = 0.1;
 
-use crate::model_loader::{load_cone, load_floor, load_monkey};
+use crate::model_loader::{load_cone, load_cylinder, load_floor, load_monkey};
 use crate::{
     camera::{FlyCamera, MovementDirection},
     renderer::Renderer,
@@ -46,7 +46,7 @@ impl ApplicationHandler for App {
             glm::vec3(0.0, 0.0, 5.0),
             self.renderer.as_ref().unwrap().get_aspect_ratio(),
         ));
-        self.models = vec![load_monkey(), load_cone(), load_floor()];
+        self.models = vec![load_monkey(), load_cone(), load_floor(), load_cylinder()];
 
         self.renderer
             .as_mut()
@@ -176,13 +176,15 @@ impl App {
     fn render_scene(&mut self) {
         let renderer = self.renderer.as_mut().unwrap();
 
-        let model = match renderer.gui.get_model_selection() {
-            crate::gui::ModelSelection::Monkey => &self.models[0],
-            crate::gui::ModelSelection::Cone => &self.models[1],
-        };
+        // let model = match renderer.gui.get_model_selection() {
+        //     crate::gui::ModelSelection::Monkey => &self.models[0],
+        //     crate::gui::ModelSelection::Cone => &self.models[1],
+        // };
+
+        let model = &self.models[3];
 
         renderer.render_scene(
-            std::slice::from_ref(model),
+            model,
             &self.interaction_mode,
             self.camera.as_ref().unwrap().get_view_matrix(),
             self.camera.as_ref().unwrap().get_projection_matrix(),

@@ -9,6 +9,8 @@ use glm::{Mat3, Mat4};
 use tobj::Model;
 use winit::event_loop::ActiveEventLoop;
 use winit::window::Window;
+use crate::lsystem::LSystem;
+use crate::turtle::TurtleInterpreter;
 
 pub struct Renderer {
     window: Window,
@@ -71,7 +73,7 @@ impl Renderer {
 
     pub fn render_scene(
         &mut self,
-        objects: &[Model],
+        base: &Model,
         interaction_mode: &AppInteractionMode,
         view_matrix: [[f32; 4]; 4],
         projection_matrix: [[f32; 4]; 4],
@@ -79,12 +81,19 @@ impl Renderer {
         let mut frame = self.display.draw();
         frame.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
 
-        let model_matrix = Mat4::identity();
+        let axiom = "F";
+        let mut production_rules = std::collections::HashMap::new();
+        production_rules.insert('F', "F+F--F+F".to_string());
+        let lsystem = LSystem::new(axiom, production_rules);
+        let lsystem_string = lsystem.generate(3);
+        let turtle = TurtleInterpreter::new();
+        let transformations = turtle.interpret(&lsystem_string, 15.0);
 
-        for object in objects {
+
+        for model_matrix in transformations.into_iter() {
             self.draw_model(
                 &mut frame,
-                object,
+                base,
                 model_matrix.into(),
                 view_matrix,
                 projection_matrix,
