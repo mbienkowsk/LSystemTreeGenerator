@@ -26,6 +26,10 @@ pub fn load_floor() -> Model {
     load_obj_file("assets/models/floor.obj")
 }
 
+pub fn load_cylinder() -> Model {
+    load_obj_file("assets/models/cylinder.obj")
+}
+
 #[cfg(test)]
 mod tests {
     use crate::model_loader::load_monkey;
@@ -65,5 +69,12 @@ mod tests {
         let floor_model = crate::model_loader::load_floor();
         display_model_info(&floor_model);
         check_if_model_loaded_correctly(&floor_model);
+    }
+
+    #[test]
+    fn cylinder_loads_correctly() {
+        let cylinder_model = crate::model_loader::load_cylinder();
+        display_model_info(&cylinder_model);
+        check_if_model_loaded_correctly(&cylinder_model);
     }
 }
