@@ -2,7 +2,9 @@ use crate::app::AppInteractionMode;
 use crate::gui::GuiController;
 use crate::shaders::make_shader_program;
 use glium::glutin::surface::WindowSurface;
-use glium::{implement_vertex, uniform, Depth, DepthTest, Display, DrawParameters, Frame, Program, Surface};
+use glium::{
+    Depth, DepthTest, Display, DrawParameters, Frame, Program, Surface, implement_vertex, uniform,
+};
 use glm::{Mat3, Mat4};
 use tobj::Model;
 use winit::window::Window;
@@ -41,17 +43,23 @@ impl Renderer {
     pub fn handle_gui_event(&mut self, event: &winit::event::WindowEvent) {
         self.gui.handle_event(event, &self.window);
     }
-    
+
     pub fn handle_interaction_mode_change(&mut self, mode: &AppInteractionMode) {
         match mode {
             AppInteractionMode::CameraControl => {
-                if let Err(e) = self.window.set_cursor_grab(winit::window::CursorGrabMode::Confined) {
+                if let Err(e) = self
+                    .window
+                    .set_cursor_grab(winit::window::CursorGrabMode::Confined)
+                {
                     log::warn!("Could not grab cursor: {e:?}");
                 }
                 self.window.set_cursor_visible(false);
             }
             AppInteractionMode::GuiInteraction => {
-                if let Err(e) = self.window.set_cursor_grab(winit::window::CursorGrabMode::None) {
+                if let Err(e) = self
+                    .window
+                    .set_cursor_grab(winit::window::CursorGrabMode::None)
+                {
                     log::warn!("Could not release cursor: {e:?}");
                 }
                 self.window.set_cursor_visible(true);
@@ -89,11 +97,10 @@ impl Renderer {
         frame.finish().expect("Failed to destroy frame");
     }
 
-
     pub fn draw_model(
         &mut self,
         frame: &mut Frame,
-        model: &Model, 
+        model: &Model,
         model_matrix: [[f32; 4]; 4],
         view_matrix: [[f32; 4]; 4],
         projection_matrix: [[f32; 4]; 4],

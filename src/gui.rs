@@ -1,7 +1,7 @@
-use egui_glium::egui_winit::egui::ViewportId;
 use egui_glium::EguiGlium;
-use glium::glutin::surface::WindowSurface;
+use egui_glium::egui_winit::egui::ViewportId;
 use glium::Display;
+use glium::glutin::surface::WindowSurface;
 use winit::event::WindowEvent;
 use winit::event_loop::ActiveEventLoop;
 use winit::window::Window;

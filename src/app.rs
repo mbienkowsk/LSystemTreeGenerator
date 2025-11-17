@@ -1,5 +1,5 @@
-use egui_glium::egui_winit::egui::ViewportId;
 use egui_glium::EguiGlium;
+use egui_glium::egui_winit::egui::ViewportId;
 use std::collections::{HashMap, HashSet};
 use winit::window::CursorGrabMode;
 
@@ -45,7 +45,6 @@ impl ApplicationHandler for App {
         let (window, display) = SimpleWindowBuilder::new()
             .with_title("L-System generator")
             .build(event_loop);
-
 
         let gui_renderer = GuiController::new(&display, &window, &event_loop);
         self.renderer = Some(Renderer::new(window, display, gui_renderer));
@@ -173,13 +172,15 @@ impl App {
                     self.interaction_mode = AppInteractionMode::CameraControl;
                 }
             }
-            self.renderer.as_mut().unwrap().handle_interaction_mode_change(&self.interaction_mode);
+            self.renderer
+                .as_mut()
+                .unwrap()
+                .handle_interaction_mode_change(&self.interaction_mode);
         }
     }
 
     fn render_scene(&mut self) {
         let renderer = self.renderer.as_mut().unwrap();
-
 
         let model = match renderer.gui.get_model_selection() {
             crate::gui::ModelSelection::Monkey => &self.models[0],
@@ -192,6 +193,5 @@ impl App {
             self.camera.as_ref().unwrap().get_view_matrix().into(),
             self.camera.as_ref().unwrap().get_projection_matrix().into(),
         )
-
     }
 }

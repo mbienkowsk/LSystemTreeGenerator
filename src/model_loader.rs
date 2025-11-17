@@ -28,36 +28,21 @@ pub fn load_floor() -> Model {
 
 #[cfg(test)]
 mod tests {
-    use tobj::Model;
     use crate::model_loader::load_monkey;
+    use tobj::Model;
 
     fn display_model_info(model: &Model) {
         println!("Model name: {}", model.name);
-        println!(
-            "Loaded model with {} positions",
-            model.mesh.positions.len()
-        );
-        println!(
-            "Loaded model with {} indices",
-            model.mesh.indices.len()
-        );
-        println!(
-            "Loaded model with {} normals",
-            model.mesh.normals.len()
-        );
-        println!(
-            "Loaded model with {} texcoords",
-            model.mesh.texcoords.len()
-        );
+        println!("Loaded model with {} positions", model.mesh.positions.len());
+        println!("Loaded model with {} indices", model.mesh.indices.len());
+        println!("Loaded model with {} normals", model.mesh.normals.len());
+        println!("Loaded model with {} texcoords", model.mesh.texcoords.len());
     }
 
     fn check_if_model_loaded_correctly(model: &Model) {
         assert!(!model.mesh.positions.is_empty());
         assert!(!model.mesh.normals.is_empty());
-        assert_eq!(
-            model.mesh.positions.len(),
-            model.mesh.normals.len()
-        );
+        assert_eq!(model.mesh.positions.len(), model.mesh.normals.len());
     }
 
     #[test]
