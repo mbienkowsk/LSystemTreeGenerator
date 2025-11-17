@@ -59,14 +59,16 @@ impl ApplicationHandler for App {
 
         // TODO recalculate transformations when parameters of L-system change
         let gui = &self.renderer.as_ref().unwrap().gui;
-        let axiom = gui.get_axiom();
-        let production_rules = gui.get_production_rules().clone().into_iter().collect();
-        let n_iterations = gui.get_n_iterations();
-        let angle = gui.get_angle();
+        let lsystem_config = gui.get_lsystem_config();
 
-        let lsystem = LSystem::new(axiom, production_rules);
-        let generated_string = lsystem.generate(n_iterations);
-        let transformations = TurtleInterpreter::interpret(&generated_string, angle);
+        let production_rules: HashMap<char, String> = lsystem_config
+            .production_rules
+            .iter()
+            .cloned()
+            .collect();
+        let lsystem = LSystem::new(&lsystem_config.axiom, production_rules);
+        let generated_string = lsystem.generate(lsystem_config.n_iterations);
+        let transformations = TurtleInterpreter::interpret(&generated_string, lsystem_config.angle);
         self.transformations = transformations;
     }
 

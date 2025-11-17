@@ -12,10 +12,25 @@ use winit::window::Window;
 pub struct GuiController {
     egui_glium: EguiGlium,
     model_selection: ModelSelection,
-    axiom: String,
-    production_rules: Vec<(char, String)>,
-    n_iterations: u32,
-    angle: f32,
+    lsystem_config: LSystemConfig,
+}
+
+pub struct LSystemConfig {
+    pub axiom: String,
+    pub production_rules: Vec<(char, String)>,
+    pub n_iterations: u32,
+    pub angle: f32,
+}
+
+impl Default for LSystemConfig {
+    fn default() -> Self {
+        Self {
+            axiom: "F".to_string(),
+            production_rules: vec![('F', "F[+F]F[-F]F".to_string())],
+            n_iterations: 3,
+            angle: 25.0,
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -30,18 +45,11 @@ impl GuiController {
         window: &Window,
         event_loop: &ActiveEventLoop,
     ) -> Self {
-        let axiom = "F".to_string();
-        let production_rules = vec![('F', "F[+F]F[-F]F".to_string())];
-        let n_iterations = 3;
-        let angle = 25.0;
 
         Self {
             egui_glium: EguiGlium::new(ViewportId::ROOT, display, window, event_loop),
             model_selection: ModelSelection::Monkey,
-            axiom,
-            production_rules,
-            n_iterations,
-            angle,
+            lsystem_config: LSystemConfig::default(),
         }
     }
 
@@ -49,20 +57,8 @@ impl GuiController {
         &self.model_selection
     }
 
-    pub fn get_axiom(&self) -> &str {
-        &self.axiom
-    }
-
-    pub fn get_n_iterations(&self) -> u32 {
-        self.n_iterations
-    }
-
-    pub fn get_angle(&self) -> f32 {
-        self.angle
-    }
-
-    pub fn get_production_rules(&self) -> &Vec<(char, String)> {
-        &self.production_rules
+    pub fn get_lsystem_config(&self) -> &LSystemConfig {
+        &self.lsystem_config
     }
 
     pub fn handle_event(&mut self, event: &WindowEvent, window: &Window) {
@@ -85,18 +81,15 @@ impl GuiController {
     }
 
     fn ui_lsystem_config(
-        axiom: &str,
-        production_rules: &[(char, String)],
-        n_iterations: &mut u32,
-        angle: &mut f32,
+        lsystem_config: &mut LSystemConfig,
         ctx: &Context,
     ) {
         egui::Window::new("LSystem Configuration").show(ctx, |ui| {
-            ui.add(egui::Slider::new(n_iterations, 0..=6).text("Number of Iterations"));
-            ui.add(egui::Slider::new(angle, 0.0..=45.0).text("Angle"));
-            ui.label(format!("{axiom:?}"));
+            ui.add(egui::Slider::new(&mut lsystem_config.n_iterations, 0..=6).text("Number of Iterations"));
+            ui.add(egui::Slider::new(&mut lsystem_config.angle, 0.0..=45.0).text("Angle"));
+            ui.label(format!("{:?}", lsystem_config.axiom));
             ui.label("Production Rules:");
-            for (i, (symbol, replacement)) in production_rules.iter().enumerate() {
+            for (i, (symbol, replacement)) in lsystem_config.production_rules.iter().enumerate() {
                 ui.horizontal(|ui| {
                     ui.label(format!("{i}: {symbol} -> {replacement}"));
                 });
@@ -106,14 +99,11 @@ impl GuiController {
 
     pub fn draw(&mut self, window: &Window, display: &Display<WindowSurface>, frame: &mut Frame) {
         let model_selection = &mut self.model_selection;
-        let axiom = &self.axiom;
-        let production_rules = &self.production_rules;
-        let n_iterations = &mut self.n_iterations;
-        let angle = &mut self.angle;
+        let lsystem_config = &mut self.lsystem_config;
 
         self.egui_glium.run(window, |ctx| {
             GuiController::ui_control_panel(model_selection, ctx);
-            GuiController::ui_lsystem_config(axiom, production_rules, n_iterations, angle, ctx);
+            GuiController::ui_lsystem_config(lsystem_config, ctx);
         });
         self.egui_glium.paint(display, frame);
     }
