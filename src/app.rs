@@ -193,6 +193,7 @@ impl App {
     fn render_scene(&mut self) {
         let renderer = self.renderer.as_mut().unwrap();
 
+        // TODO some reasonable base models for L-systems
         // let model = match renderer.gui.get_model_selection() {
         //     crate::gui::ModelSelection::Monkey => &self.models[0],
         //     crate::gui::ModelSelection::Cone => &self.models[1],
