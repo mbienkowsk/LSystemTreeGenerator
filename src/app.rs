@@ -13,7 +13,6 @@ use winit::{
 // TODO: this could probably be calculated based on time since last frame instead
 const DELTA_TIME: f32 = 0.1;
 
-use crate::gui::GuiController;
 use crate::model_loader::{load_cone, load_floor, load_monkey};
 use crate::{
     camera::{FlyCamera, MovementDirection},
@@ -42,8 +41,7 @@ impl ApplicationHandler for App {
             .with_title("L-System generator")
             .build(event_loop);
 
-        let gui_renderer = GuiController::new(&display, &window, event_loop);
-        self.renderer = Some(Renderer::new(window, display, gui_renderer));
+        self.renderer = Some(Renderer::new(window, display, event_loop));
         self.camera = Some(FlyCamera::new(
             glm::vec3(0.0, 0.0, 5.0),
             self.renderer.as_ref().unwrap().get_aspect_ratio(),

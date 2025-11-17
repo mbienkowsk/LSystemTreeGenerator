@@ -7,6 +7,7 @@ use glium::{
 };
 use glm::{Mat3, Mat4};
 use tobj::Model;
+use winit::event_loop::ActiveEventLoop;
 use winit::window::Window;
 
 pub struct Renderer {
@@ -20,15 +21,16 @@ impl Renderer {
     pub fn new(
         window: Window,
         display: Display<WindowSurface>,
-        gui_renderer: GuiController,
+        event_loop: &ActiveEventLoop,
     ) -> Self {
         let program = make_shader_program(&display).expect("Failed to create shader program");
+        let gui = GuiController::new(&display, &window, event_loop);
 
         Renderer {
             window,
             display,
             program,
-            gui: gui_renderer,
+            gui,
         }
     }
 
