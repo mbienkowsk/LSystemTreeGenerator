@@ -59,7 +59,6 @@ impl ApplicationHandler for App {
             .unwrap()
             .handle_interaction_mode_change(&self.interaction_mode);
 
-        // TODO recalculate transformations when parameters of L-system change
         self.lsystem_config = Some(self.get_current_lsystem_config().clone());
         self.calculate_transformations();
     }
