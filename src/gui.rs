@@ -1,7 +1,7 @@
 // rust
 use egui::Context;
-use egui_glium::egui_winit::egui::ViewportId;
 use egui_glium::EguiGlium;
+use egui_glium::egui_winit::egui::ViewportId;
 use glium::glutin::surface::WindowSurface;
 use glium::{Display, Frame};
 use log::info;
@@ -84,8 +84,16 @@ impl GuiController {
         });
     }
 
-    fn ui_lsystem_config(axiom: &str, production_rules: &[(char, String)], n_iterations: &mut u32, ctx: &Context) {
+    fn ui_lsystem_config(
+        axiom: &str,
+        production_rules: &[(char, String)],
+        n_iterations: &mut u32,
+        angle: &mut f32,
+        ctx: &Context,
+    ) {
         egui::Window::new("LSystem Configuration").show(ctx, |ui| {
+            ui.add(egui::Slider::new(n_iterations, 0..=6).text("Number of Iterations"));
+            ui.add(egui::Slider::new(angle, 0.0..=45.0).text("Angle"));
             ui.label(format!("{:?}", axiom));
             ui.label("Production Rules:");
             for (i, (symbol, replacement)) in production_rules.iter().enumerate() {
@@ -101,10 +109,11 @@ impl GuiController {
         let axiom = &self.axiom;
         let production_rules = &self.production_rules;
         let n_iterations = &mut self.n_iterations;
+        let angle = &mut self.angle;
 
         self.egui_glium.run(window, |ctx| {
             GuiController::ui_control_panel(model_selection, ctx);
-            GuiController::ui_lsystem_config(axiom, production_rules, n_iterations, ctx);
+            GuiController::ui_lsystem_config(axiom, production_rules, n_iterations, angle, ctx);
         });
         self.egui_glium.paint(display, frame);
     }

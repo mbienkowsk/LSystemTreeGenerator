@@ -14,13 +14,13 @@ use winit::{
 // TODO: this could probably be calculated based on time since last frame instead
 const DELTA_TIME: f32 = 0.1;
 
+use crate::lsystem::LSystem;
 use crate::model_loader::{load_cone, load_cylinder, load_floor, load_monkey};
+use crate::turtle::TurtleInterpreter;
 use crate::{
     camera::{FlyCamera, MovementDirection},
     renderer::Renderer,
 };
-use crate::lsystem::LSystem;
-use crate::turtle::TurtleInterpreter;
 
 #[derive(Default, Debug, PartialEq)]
 pub enum AppInteractionMode {
@@ -60,10 +60,7 @@ impl ApplicationHandler for App {
         // TODO recalculate transformations when parameters of L-system change
         let gui = &self.renderer.as_ref().unwrap().gui;
         let axiom = gui.get_axiom();
-        let production_rules = gui
-            .get_production_rules()
-            .clone()
-            .into_iter().collect();
+        let production_rules = gui.get_production_rules().clone().into_iter().collect();
         let n_iterations = gui.get_n_iterations();
         let angle = gui.get_angle();
 

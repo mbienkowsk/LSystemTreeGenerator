@@ -5,7 +5,7 @@ use crate::shaders::make_shader_program;
 use crate::turtle::TurtleInterpreter;
 use glium::glutin::surface::WindowSurface;
 use glium::{
-    implement_vertex, uniform, Depth, DepthTest, Display, DrawParameters, Frame, Program, Surface,
+    Depth, DepthTest, Display, DrawParameters, Frame, Program, Surface, implement_vertex, uniform,
 };
 use glm::{Mat3, Mat4};
 use tobj::Model;
@@ -81,7 +81,7 @@ impl Renderer {
     ) {
         let mut frame = self.display.draw();
         frame.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
-        
+
         for model_matrix in transformations {
             self.draw_model(
                 &mut frame,
