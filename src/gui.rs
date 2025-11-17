@@ -2,6 +2,7 @@ use egui_glium::EguiGlium;
 use egui_glium::egui_winit::egui::ViewportId;
 use glium::Display;
 use glium::glutin::surface::WindowSurface;
+use log::info;
 use winit::event::WindowEvent;
 use winit::event_loop::ActiveEventLoop;
 use winit::window::Window;
@@ -42,7 +43,7 @@ impl GuiController {
             egui::Window::new("Control panel").show(ctx, |ui| {
                 ui.heading("Hello World!");
                 if ui.button("Click").clicked() {
-                    log::info!("Clicked button")
+                    info!("Clicked button");
                 }
 
                 egui::ComboBox::from_label("Selected Model")
@@ -60,6 +61,6 @@ impl GuiController {
                         );
                     })
             });
-        })
+        });
     }
 }

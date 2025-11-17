@@ -1,6 +1,6 @@
 # Lint the code
 lint:
-    cargo clippy --all-targets --all-features -- -D warnings
+    cargo clippy --all-targets --all-features -- -D warnings -D clippy::pedantic
 
 # Build the project (Release mode)
 build:
