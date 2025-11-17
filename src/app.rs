@@ -21,6 +21,7 @@ use crate::{
     camera::{FlyCamera, MovementDirection},
     renderer::Renderer,
 };
+use crate::gui::LSystemConfig;
 
 #[derive(Default, Debug, PartialEq)]
 pub enum AppInteractionMode {
@@ -36,6 +37,7 @@ pub struct App {
     pressed_keys: HashSet<KeyCode>,
     models: Vec<Model>,
     interaction_mode: AppInteractionMode,
+    lsystem_config: Option<LSystemConfig>,
     transformations: Vec<Mat4>,
 }
 
@@ -58,18 +60,8 @@ impl ApplicationHandler for App {
             .handle_interaction_mode_change(&self.interaction_mode);
 
         // TODO recalculate transformations when parameters of L-system change
-        let gui = &self.renderer.as_ref().unwrap().gui;
-        let lsystem_config = gui.get_lsystem_config();
-
-        let production_rules: HashMap<char, String> = lsystem_config
-            .production_rules
-            .iter()
-            .cloned()
-            .collect();
-        let lsystem = LSystem::new(&lsystem_config.axiom, production_rules);
-        let generated_string = lsystem.generate(lsystem_config.n_iterations);
-        let transformations = TurtleInterpreter::interpret(&generated_string, lsystem_config.angle);
-        self.transformations = transformations;
+        self.lsystem_config = Some(self.get_current_lsystem_config().clone());
+        self.calculate_transformations()
     }
 
     fn window_event(
@@ -95,6 +87,13 @@ impl ApplicationHandler for App {
             WindowEvent::RedrawRequested => {
                 if self.renderer.is_none() {
                     return;
+                }
+
+                let new_lsystem_config = self.get_current_lsystem_config();
+                if new_lsystem_config != self.lsystem_config.as_ref().unwrap() {
+                    log::info!("L-System config changed to {:?}", new_lsystem_config);
+                    self.lsystem_config = Some(new_lsystem_config.clone());
+                    self.calculate_transformations();
                 }
 
                 self.render_scene();
@@ -208,5 +207,24 @@ impl App {
             self.camera.as_ref().unwrap().get_view_matrix(),
             self.camera.as_ref().unwrap().get_projection_matrix(),
         );
+    }
+
+    fn calculate_transformations(&mut self) {
+        let gui = &self.renderer.as_ref().unwrap().gui;
+        let lsystem_config = gui.get_lsystem_config();
+
+        let production_rules: HashMap<char, String> = lsystem_config
+            .production_rules
+            .iter()
+            .cloned()
+            .collect();
+        let lsystem = LSystem::new(&lsystem_config.axiom, production_rules);
+        let generated_string = lsystem.generate(lsystem_config.n_iterations);
+        let transformations = TurtleInterpreter::interpret(&generated_string, lsystem_config.angle);
+        self.transformations = transformations;
+    }
+
+    fn get_current_lsystem_config(&self) -> &LSystemConfig {
+        self.renderer.as_ref().unwrap().gui.get_lsystem_config()
     }
 }

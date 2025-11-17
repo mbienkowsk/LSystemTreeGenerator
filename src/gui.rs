@@ -15,6 +15,7 @@ pub struct GuiController {
     lsystem_config: LSystemConfig,
 }
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct LSystemConfig {
     pub axiom: String,
     pub production_rules: Vec<(char, String)>,
