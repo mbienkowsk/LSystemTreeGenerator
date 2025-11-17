@@ -81,7 +81,6 @@ impl ApplicationHandler for App {
                     return;
                 }
 
-                self.handle_ui_control();
                 self.render_scene();
                 self.handle_movement();
             }
@@ -125,6 +124,9 @@ impl App {
 
     fn handle_key_event(&mut self, event: &KeyEvent) {
         match (event.state, event.physical_key) {
+            (ElementState::Pressed, PhysicalKey::Code(KeyCode::Escape)) => {
+                self.toggle_interaction_mode();
+            }
             (ElementState::Pressed, PhysicalKey::Code(code)) => {
                 self.pressed_keys.insert(code);
             }
@@ -158,21 +160,19 @@ impl App {
         }
     }
 
-    fn handle_ui_control(&mut self) {
-        if self.pressed_keys.contains(&KeyCode::Escape) {
-            match self.interaction_mode {
-                AppInteractionMode::CameraControl => {
-                    self.interaction_mode = AppInteractionMode::GuiInteraction;
-                }
-                AppInteractionMode::GuiInteraction => {
-                    self.interaction_mode = AppInteractionMode::CameraControl;
-                }
+    fn toggle_interaction_mode(&mut self) {
+        match self.interaction_mode {
+            AppInteractionMode::CameraControl => {
+                self.interaction_mode = AppInteractionMode::GuiInteraction;
             }
-            self.renderer
-                .as_mut()
-                .unwrap()
-                .handle_interaction_mode_change(&self.interaction_mode);
+            AppInteractionMode::GuiInteraction => {
+                self.interaction_mode = AppInteractionMode::CameraControl;
+            }
         }
+        self.renderer
+            .as_mut()
+            .unwrap()
+            .handle_interaction_mode_change(&self.interaction_mode);
     }
 
     fn render_scene(&mut self) {
@@ -188,6 +188,6 @@ impl App {
             &self.interaction_mode,
             self.camera.as_ref().unwrap().get_view_matrix(),
             self.camera.as_ref().unwrap().get_projection_matrix(),
-        )
+        );
     }
 }

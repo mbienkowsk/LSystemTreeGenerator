@@ -86,7 +86,7 @@ impl Renderer {
                 model_matrix.into(),
                 view_matrix,
                 projection_matrix,
-            )
+            );
         }
 
         if *interaction_mode == AppInteractionMode::GuiInteraction {
