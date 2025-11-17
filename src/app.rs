@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use glium::backend::glutin::SimpleWindowBuilder;
+use glm::Mat4;
 use tobj::Model;
 use winit::{
     application::ApplicationHandler,
@@ -18,6 +19,8 @@ use crate::{
     camera::{FlyCamera, MovementDirection},
     renderer::Renderer,
 };
+use crate::lsystem::LSystem;
+use crate::turtle::TurtleInterpreter;
 
 #[derive(Default, Debug, PartialEq)]
 pub enum AppInteractionMode {
@@ -33,6 +36,7 @@ pub struct App {
     pressed_keys: HashSet<KeyCode>,
     models: Vec<Model>,
     interaction_mode: AppInteractionMode,
+    transformations: Vec<Mat4>,
 }
 
 impl ApplicationHandler for App {
@@ -52,6 +56,21 @@ impl ApplicationHandler for App {
             .as_mut()
             .unwrap()
             .handle_interaction_mode_change(&self.interaction_mode);
+
+        // TODO recalculate transformations when parameters of L-system change
+        let gui = &self.renderer.as_ref().unwrap().gui;
+        let axiom = gui.get_axiom();
+        let production_rules = gui
+            .get_production_rules()
+            .clone()
+            .into_iter().collect();
+        let n_iterations = gui.get_n_iterations();
+        let angle = gui.get_angle();
+
+        let lsystem = LSystem::new(axiom, production_rules);
+        let generated_string = lsystem.generate(n_iterations);
+        let transformations = TurtleInterpreter::interpret(&generated_string, angle);
+        self.transformations = transformations;
     }
 
     fn window_event(
@@ -185,6 +204,7 @@ impl App {
 
         renderer.render_scene(
             model,
+            self.transformations.clone(),
             &self.interaction_mode,
             self.camera.as_ref().unwrap().get_view_matrix(),
             self.camera.as_ref().unwrap().get_projection_matrix(),

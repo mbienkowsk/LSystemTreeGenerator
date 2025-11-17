@@ -14,6 +14,8 @@ pub struct GuiController {
     model_selection: ModelSelection,
     axiom: String,
     production_rules: Vec<(char, String)>,
+    n_iterations: u32,
+    angle: f32,
 }
 
 #[derive(Debug, PartialEq)]
@@ -30,11 +32,16 @@ impl GuiController {
     ) -> Self {
         let axiom = "F".to_string();
         let production_rules = vec![('F', "F[+F]F[-F]F".to_string())];
+        let n_iterations = 3;
+        let angle = 25.0;
+
         Self {
             egui_glium: EguiGlium::new(ViewportId::ROOT, display, window, event_loop),
             model_selection: ModelSelection::Monkey,
             axiom,
             production_rules,
+            n_iterations,
+            angle,
         }
     }
 
@@ -44,6 +51,14 @@ impl GuiController {
 
     pub fn get_axiom(&self) -> &str {
         &self.axiom
+    }
+
+    pub fn get_n_iterations(&self) -> u32 {
+        self.n_iterations
+    }
+
+    pub fn get_angle(&self) -> f32 {
+        self.angle
     }
 
     pub fn get_production_rules(&self) -> &Vec<(char, String)> {
@@ -69,7 +84,7 @@ impl GuiController {
         });
     }
 
-    fn ui_lsystem_config(axiom: &str, production_rules: &[(char, String)], ctx: &Context) {
+    fn ui_lsystem_config(axiom: &str, production_rules: &[(char, String)], n_iterations: &mut u32, ctx: &Context) {
         egui::Window::new("LSystem Configuration").show(ctx, |ui| {
             ui.label(format!("{:?}", axiom));
             ui.label("Production Rules:");
@@ -85,10 +100,11 @@ impl GuiController {
         let model_selection = &mut self.model_selection;
         let axiom = &self.axiom;
         let production_rules = &self.production_rules;
+        let n_iterations = &mut self.n_iterations;
 
         self.egui_glium.run(window, |ctx| {
             GuiController::ui_control_panel(model_selection, ctx);
-            GuiController::ui_lsystem_config(axiom, production_rules, ctx);
+            GuiController::ui_lsystem_config(axiom, production_rules, n_iterations, ctx);
         });
         self.egui_glium.paint(display, frame);
     }

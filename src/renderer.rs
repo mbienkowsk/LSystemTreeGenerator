@@ -7,7 +7,7 @@ use glium::glutin::surface::WindowSurface;
 use glium::{
     implement_vertex, uniform, Depth, DepthTest, Display, DrawParameters, Frame, Program, Surface,
 };
-use glm::Mat3;
+use glm::{Mat3, Mat4};
 use tobj::Model;
 use winit::event_loop::ActiveEventLoop;
 use winit::window::Window;
@@ -74,20 +74,14 @@ impl Renderer {
     pub fn render_scene(
         &mut self,
         base: &Model,
+        transformations: Vec<Mat4>,
         interaction_mode: &AppInteractionMode,
         view_matrix: [[f32; 4]; 4],
         projection_matrix: [[f32; 4]; 4],
     ) {
         let mut frame = self.display.draw();
         frame.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
-
-        let axiom = "F";
-        let mut production_rules = std::collections::HashMap::new();
-        production_rules.insert('F', "F[+F]F[-F]F".to_string());
-        let lsystem = LSystem::new(axiom, production_rules);
-        let lsystem_string = lsystem.generate(3);
-        let transformations = TurtleInterpreter::interpret(&lsystem_string, 15.0);
-
+        
         for model_matrix in transformations {
             self.draw_model(
                 &mut frame,
