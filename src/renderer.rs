@@ -34,7 +34,7 @@ impl Renderer {
         }
     }
 
-    pub fn requrest_redraw(&self) {
+    pub fn request_redraw(&self) {
         self.window.request_redraw();
     }
 

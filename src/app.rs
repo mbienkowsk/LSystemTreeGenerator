@@ -102,7 +102,7 @@ impl ApplicationHandler for App {
 
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
         if let Some(ref renderer) = self.renderer {
-            renderer.requrest_redraw();
+            renderer.request_redraw();
         }
     }
 }
