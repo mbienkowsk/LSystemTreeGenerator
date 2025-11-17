@@ -101,8 +101,7 @@ impl Renderer {
         }
 
         if *interaction_mode == AppInteractionMode::GuiInteraction {
-            self.gui.draw_ui(&self.window);
-            self.gui.egui_glium.paint(&self.display, &mut frame);
+            self.gui.draw(&self.window, &self.display, &mut frame);
         }
 
         frame.finish().expect("Failed to destroy frame");

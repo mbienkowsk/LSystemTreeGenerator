@@ -1,6 +1,6 @@
 use egui_glium::EguiGlium;
 use egui_glium::egui_winit::egui::ViewportId;
-use glium::Display;
+use glium::{Display, Frame};
 use glium::glutin::surface::WindowSurface;
 use log::info;
 use winit::event::WindowEvent;
@@ -8,7 +8,7 @@ use winit::event_loop::ActiveEventLoop;
 use winit::window::Window;
 
 pub struct GuiController {
-    pub egui_glium: EguiGlium,
+    egui_glium: EguiGlium,
     model_selection: ModelSelection,
 }
 
@@ -38,7 +38,7 @@ impl GuiController {
         let _ = self.egui_glium.on_event(window, event);
     }
 
-    pub fn draw_ui(&mut self, window: &Window) {
+    fn ui_components(&mut self, window: &Window) {
         self.egui_glium.run(window, |ctx| {
             egui::Window::new("Control panel").show(ctx, |ui| {
                 ui.heading("Hello World!");
@@ -62,5 +62,10 @@ impl GuiController {
                     })
             });
         });
+    }
+    
+    pub fn draw(&mut self, window: &Window, display: &Display<WindowSurface>, frame: &mut Frame) {
+        self.ui_components(window);
+        self.egui_glium.paint(display, frame);
     }
 }
