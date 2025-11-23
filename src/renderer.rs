@@ -75,9 +75,12 @@ impl Renderer {
         interaction_mode: &AppInteractionMode,
         view_matrix: [[f32; 4]; 4],
         projection_matrix: [[f32; 4]; 4],
+        camera_pos: [f32; 3],
     ) {
         let mut frame = self.display.draw();
-        frame.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
+        frame.clear_color_and_depth((0.02, 0.02, 0.02, 1.0), 1.0);
+
+        let enable_phong = self.gui.enable_shading;
 
         let model_matrix = Mat4::identity();
 
@@ -88,6 +91,8 @@ impl Renderer {
                 model_matrix.into(),
                 view_matrix,
                 projection_matrix,
+                camera_pos,
+                enable_phong,
             );
         }
 
@@ -106,6 +111,8 @@ impl Renderer {
         model_matrix: [[f32; 4]; 4],
         view_matrix: [[f32; 4]; 4],
         projection_matrix: [[f32; 4]; 4],
+        camera_pos: [f32; 3],
+        enable_phong: bool,
     ) {
         let (vertices, indices) = Self::model_to_vertices_and_indices(model);
         let model_mat3 = Mat3::from_fn(|r, c| model_matrix[r][c]);
@@ -120,6 +127,8 @@ impl Renderer {
             ..DrawParameters::default()
         };
 
+        let light_pos = [10.0f32, 10.0, 10.0];
+
         frame
             .draw(
                 &glium::VertexBuffer::new(&self.display, &vertices).unwrap(),
@@ -130,7 +139,7 @@ impl Renderer {
                 )
                     .unwrap(),
                 &self.program,
-                &uniform! {model: model_matrix, view: view_matrix, projection: projection_matrix, normal_matrix: normal_matrix},
+                &uniform! {model: model_matrix, view: view_matrix, projection: projection_matrix, normal_matrix: normal_matrix, u_light_pos: light_pos, u_view_pos: camera_pos, u_enable_phong: enable_phong},
                 &params,
             )
             .expect("Failed to draw frame");

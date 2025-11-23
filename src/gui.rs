@@ -10,6 +10,7 @@ use winit::window::Window;
 pub struct GuiController {
     pub egui_glium: EguiGlium,
     model_selection: ModelSelection,
+    pub enable_shading: bool,
 }
 
 #[derive(Debug, PartialEq)]
@@ -27,6 +28,7 @@ impl GuiController {
         Self {
             egui_glium: EguiGlium::new(ViewportId::ROOT, display, window, event_loop),
             model_selection: ModelSelection::Monkey,
+            enable_shading: true,
         }
     }
 
@@ -45,6 +47,10 @@ impl GuiController {
                 if ui.button("Click").clicked() {
                     info!("Clicked button");
                 }
+
+                ui.separator();
+                ui.checkbox(&mut self.enable_shading, "Enable Phong Shading");
+                ui.separator();
 
                 egui::ComboBox::from_label("Selected Model")
                     .selected_text(format!("{:?}", self.model_selection))
