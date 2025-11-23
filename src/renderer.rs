@@ -163,7 +163,7 @@ impl Renderer {
         let (vertices, indices) = Self::model_to_vertices_and_indices(model);
 
         let vertex_buffer = &glium::VertexBuffer::new(&self.display, &vertices).unwrap();
-        let instance_buffer = glium::VertexBuffer::new(&self.display, &instance_data).unwrap();
+        let instance_buffer = glium::VertexBuffer::new(&self.display, instance_data).unwrap();
         let index_buffer = &glium::IndexBuffer::new(
             &self.display,
             glium::index::PrimitiveType::TrianglesList,
@@ -229,6 +229,7 @@ pub struct Vertex {
 implement_vertex!(Vertex, position, normal);
 
 #[derive(Copy, Clone)]
+#[allow(clippy::struct_field_names)]
 pub struct InstanceData {
     model_matrix_0: [f32; 4],
     model_matrix_1: [f32; 4],
