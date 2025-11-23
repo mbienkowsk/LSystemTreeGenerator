@@ -181,11 +181,14 @@ impl App {
             crate::gui::ModelSelection::Cone => &self.models[1],
         };
 
+        let camera = self.camera.as_ref().unwrap();
+
         renderer.render_scene(
             std::slice::from_ref(model),
             &self.interaction_mode,
-            self.camera.as_ref().unwrap().get_view_matrix(),
-            self.camera.as_ref().unwrap().get_projection_matrix(),
+            camera.get_view_matrix(),
+            camera.get_projection_matrix(),
+            camera.get_position(),
         );
     }
 }

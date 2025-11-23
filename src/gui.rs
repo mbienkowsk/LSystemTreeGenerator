@@ -10,12 +10,20 @@ use winit::window::Window;
 pub struct GuiController {
     pub egui_glium: EguiGlium,
     model_selection: ModelSelection,
+    pub shading_mode: ShadingMode,
 }
 
 #[derive(Debug, PartialEq)]
 pub enum ModelSelection {
     Monkey,
     Cone,
+}
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum ShadingMode {
+    Flat,
+    Gouraud,
+    Phong,
 }
 
 impl GuiController {
@@ -27,6 +35,7 @@ impl GuiController {
         Self {
             egui_glium: EguiGlium::new(ViewportId::ROOT, display, window, event_loop),
             model_selection: ModelSelection::Monkey,
+            shading_mode: ShadingMode::Phong,
         }
     }
 
@@ -45,6 +54,13 @@ impl GuiController {
                 if ui.button("Click").clicked() {
                     info!("Clicked button");
                 }
+
+                ui.separator();
+                ui.label("Shading Mode:");
+                ui.radio_value(&mut self.shading_mode, ShadingMode::Flat, "Flat");
+                ui.radio_value(&mut self.shading_mode, ShadingMode::Gouraud, "Gouraud");
+                ui.radio_value(&mut self.shading_mode, ShadingMode::Phong, "Phong");
+                ui.separator();
 
                 egui::ComboBox::from_label("Selected Model")
                     .selected_text(format!("{:?}", self.model_selection))

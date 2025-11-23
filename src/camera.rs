@@ -50,6 +50,10 @@ impl FlyCamera {
         view_matrix.into()
     }
 
+    pub fn get_position(&self) -> [f32; 3] {
+        [self.position.x, self.position.y, self.position.z]
+    }
+
     pub fn get_projection_matrix(&self) -> [[f32; 4]; 4] {
         let projection_matrix = glm::perspective_rh_zo(
             self.aspect_ratio,
