@@ -49,7 +49,7 @@ impl ApplicationHandler for App {
 
         self.renderer = Some(Renderer::new(window, display, event_loop));
         self.camera = Some(FlyCamera::new(
-            glm::vec3(0.0, 0.0, 5.0),
+            glm::vec3(0.0, 1.0, 5.0),
             self.renderer.as_ref().unwrap().get_aspect_ratio(),
         ));
         self.models = vec![load_cylinder(), load_monkey(), load_floor()];
@@ -203,6 +203,7 @@ impl App {
         renderer.render_scene(
             model,
             self.transformations.clone(),
+            &self.models[2], // floor
             &self.interaction_mode,
             camera.get_view_matrix(),
             camera.get_projection_matrix(),

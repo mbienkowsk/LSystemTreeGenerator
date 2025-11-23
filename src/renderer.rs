@@ -79,6 +79,7 @@ impl Renderer {
         &mut self,
         base: &Model,
         transformations: Vec<Mat4>,
+        floor: &Model,
         interaction_mode: &AppInteractionMode,
         view_matrix: [[f32; 4]; 4],
         projection_matrix: [[f32; 4]; 4],
@@ -108,52 +109,25 @@ impl Renderer {
             );
         }
 
+        // There is overhead in using instanced rendering for a single instance
+        // But it is simpler this way
+        let floor_instance = vec![InstanceData::from_matrix(Mat4::identity())];
+        self.draw_model_instanced(
+            &mut frame,
+            floor,
+            &floor_instance,
+            view_matrix,
+            projection_matrix,
+            camera_pos,
+            light_pos,
+            shading_mode,
+        );
+
         if *interaction_mode == AppInteractionMode::GuiInteraction {
             self.gui.draw(&self.window, &self.display, &mut frame);
         }
 
         frame.finish().expect("Failed to destroy frame");
-    }
-
-    pub fn draw_model(
-        &mut self,
-        frame: &mut Frame,
-        model: &Model,
-        model_matrix: [[f32; 4]; 4],
-        view_matrix: [[f32; 4]; 4],
-        projection_matrix: [[f32; 4]; 4],
-        camera_pos: [f32; 3],
-    ) {
-        let (vertices, indices) = Self::model_to_vertices_and_indices(model);
-        let model_mat3 = Mat3::from_fn(|r, c| model_matrix[r][c]);
-        let normal_matrix: [[f32; 3]; 3] = glm::inverse_transpose(model_mat3).into();
-
-        let params = DrawParameters {
-            depth: Depth {
-                test: DepthTest::IfLess,
-                write: true,
-                ..Depth::default()
-            },
-            ..DrawParameters::default()
-        };
-
-        let light_pos = [10.0f32, 10.0, 10.0];
-        let shading_mode = i32::from(*self.gui.get_shading_mode());
-
-        frame
-            .draw(
-                &glium::VertexBuffer::new(&self.display, &vertices).unwrap(),
-                &glium::IndexBuffer::new(
-                    &self.display,
-                    glium::index::PrimitiveType::TrianglesList,
-                    &indices,
-                )
-                    .unwrap(),
-                &self.program,
-                &uniform! {model: model_matrix, view: view_matrix, projection: projection_matrix, normal_matrix: normal_matrix, u_light_pos: light_pos, u_view_pos: camera_pos, u_shading_mode: shading_mode},
-                &params,
-            )
-            .expect("Failed to draw frame");
     }
 
     pub fn draw_model_instanced(
