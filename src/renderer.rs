@@ -1,5 +1,6 @@
 use crate::app::AppInteractionMode;
 use crate::gui::GuiController;
+use crate::gui::ShadingMode;
 use crate::shaders::make_shader_program;
 use glium::glutin::surface::WindowSurface;
 use glium::{
@@ -78,9 +79,9 @@ impl Renderer {
         camera_pos: [f32; 3],
     ) {
         let mut frame = self.display.draw();
-        frame.clear_color_and_depth((0.02, 0.02, 0.02, 1.0), 1.0);
+        frame.clear_color_and_depth((0.1, 0.1, 0.1, 1.0), 1.0);
 
-        let enable_phong = self.gui.enable_shading;
+        let shading_mode = self.gui.shading_mode;
 
         let model_matrix = Mat4::identity();
 
@@ -92,7 +93,7 @@ impl Renderer {
                 view_matrix,
                 projection_matrix,
                 camera_pos,
-                enable_phong,
+                shading_mode,
             );
         }
 
@@ -112,7 +113,7 @@ impl Renderer {
         view_matrix: [[f32; 4]; 4],
         projection_matrix: [[f32; 4]; 4],
         camera_pos: [f32; 3],
-        enable_phong: bool,
+        shading_mode: ShadingMode,
     ) {
         let (vertices, indices) = Self::model_to_vertices_and_indices(model);
         let model_mat3 = Mat3::from_fn(|r, c| model_matrix[r][c]);
@@ -128,6 +129,11 @@ impl Renderer {
         };
 
         let light_pos = [10.0f32, 10.0, 10.0];
+        let shading_mode_int = match shading_mode {
+            ShadingMode::Flat => 0i32,
+            ShadingMode::Gouraud => 1i32,
+            ShadingMode::Phong => 2i32,
+        };
 
         frame
             .draw(
@@ -139,7 +145,7 @@ impl Renderer {
                 )
                     .unwrap(),
                 &self.program,
-                &uniform! {model: model_matrix, view: view_matrix, projection: projection_matrix, normal_matrix: normal_matrix, u_light_pos: light_pos, u_view_pos: camera_pos, u_enable_phong: enable_phong},
+                &uniform! {model: model_matrix, view: view_matrix, projection: projection_matrix, normal_matrix: normal_matrix, u_light_pos: light_pos, u_view_pos: camera_pos, u_shading_mode: shading_mode_int},
                 &params,
             )
             .expect("Failed to draw frame");
