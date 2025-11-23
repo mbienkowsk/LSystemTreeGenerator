@@ -222,6 +222,10 @@ impl App {
     }
 
     fn get_current_lsystem_config(&self) -> &LSystemConfig {
-        self.renderer.as_ref().unwrap().get_gui_controller().get_lsystem_config()
+        self.renderer
+            .as_ref()
+            .unwrap()
+            .get_gui_controller()
+            .get_lsystem_config()
     }
 }

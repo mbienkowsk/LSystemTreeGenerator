@@ -18,7 +18,6 @@ pub fn load_monkey() -> Model {
     load_obj_file("assets/models/monkey.obj")
 }
 
-
 pub fn load_floor() -> Model {
     load_obj_file("assets/models/floor.obj")
 }
@@ -29,8 +28,8 @@ pub fn load_cylinder() -> Model {
 
 #[cfg(test)]
 mod tests {
-    use tobj::Model;
     use crate::model_loader;
+    use tobj::Model;
 
     fn display_model_info(model: &Model) {
         println!("Model name: {}", model.name);
@@ -52,7 +51,6 @@ mod tests {
         display_model_info(&monkey_model);
         check_if_model_loaded_correctly(&monkey_model);
     }
-
 
     #[test]
     fn floor_loads_correctly() {
