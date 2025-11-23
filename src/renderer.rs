@@ -1,12 +1,10 @@
 use crate::app::AppInteractionMode;
 use crate::gui::GuiController;
-
-use crate::gui::ShadingMode;
 use crate::shaders::make_shader_program;
 
 use glium::glutin::surface::WindowSurface;
 use glium::{
-    Depth, DepthTest, Display, DrawParameters, Frame, Program, Surface, implement_vertex, uniform,
+    implement_vertex, uniform, Depth, DepthTest, Display, DrawParameters, Frame, Program, Surface,
 };
 use glm::{Mat3, Mat4};
 use tobj::Model;
@@ -76,6 +74,7 @@ impl Renderer {
         }
     }
 
+    // TODO use instanced rendering
     pub fn render_scene(
         &mut self,
         base: &Model,
@@ -129,11 +128,7 @@ impl Renderer {
         };
 
         let light_pos = [10.0f32, 10.0, 10.0];
-        let shading_mode_int = match self.gui.shading_mode {
-            ShadingMode::Flat => 0i32,
-            ShadingMode::Gouraud => 1i32,
-            ShadingMode::Phong => 2i32,
-        };
+        let shading_mode = i32::from(*self.gui.get_shading_mode());
 
         frame
             .draw(
@@ -145,7 +140,7 @@ impl Renderer {
                 )
                     .unwrap(),
                 &self.program,
-                &uniform! {model: model_matrix, view: view_matrix, projection: projection_matrix, normal_matrix: normal_matrix, u_light_pos: light_pos, u_view_pos: camera_pos, u_shading_mode: shading_mode_int},
+                &uniform! {model: model_matrix, view: view_matrix, projection: projection_matrix, normal_matrix: normal_matrix, u_light_pos: light_pos, u_view_pos: camera_pos, u_shading_mode: shading_mode},
                 &params,
             )
             .expect("Failed to draw frame");

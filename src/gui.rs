@@ -12,7 +12,7 @@ pub struct GuiController {
     egui_glium: EguiGlium,
     model_selection: ModelSelection,
     lsystem_config: LSystemConfig,
-    pub shading_mode: ShadingMode,
+    shading_mode: ShadingMode,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -47,6 +47,16 @@ pub enum ShadingMode {
     Phong,
 }
 
+impl From<ShadingMode> for i32 {
+    fn from(mode: ShadingMode) -> Self {
+        match mode {
+            ShadingMode::Flat => 0,
+            ShadingMode::Gouraud => 1,
+            ShadingMode::Phong => 2,
+        }
+    }
+}
+
 
 impl GuiController {
     pub fn new(
@@ -64,6 +74,10 @@ impl GuiController {
 
     pub fn get_lsystem_config(&self) -> &LSystemConfig {
         &self.lsystem_config
+    }
+
+    pub fn get_shading_mode(&self) -> &ShadingMode {
+        &self.shading_mode
     }
 
     pub fn handle_event(&mut self, event: &WindowEvent, window: &Window) {
