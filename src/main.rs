@@ -8,6 +8,7 @@ mod gui;
 mod lsystem;
 mod model_loader;
 mod renderer;
+mod scene;
 mod shaders;
 mod turtle;
 

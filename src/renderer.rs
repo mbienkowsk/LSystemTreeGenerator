@@ -1,5 +1,6 @@
 use crate::app::AppInteractionMode;
-use crate::gui::{GuiController};
+use crate::gui::GuiController;
+use crate::scene::Scene;
 use crate::shaders::make_shader_program;
 
 use glium::glutin::surface::WindowSurface;
@@ -78,9 +79,7 @@ impl Renderer {
     // TODO render floor
     pub fn render_scene(
         &mut self,
-        base: &Model,
-        transformations: Vec<Mat4>,
-        floor: &Model,
+        scene: &Scene,
         interaction_mode: &AppInteractionMode,
         view_matrix: [[f32; 4]; 4],
         projection_matrix: [[f32; 4]; 4],
@@ -90,22 +89,22 @@ impl Renderer {
         frame.clear_color_and_depth((0.1, 0.1, 0.1, 1.0), 1.0);
 
         let shading_mode = i32::from(*self.gui.get_shading_mode());
-        let light_pos = [10.0f32, 10.0, 10.0];
 
-        if !transformations.is_empty() {
-            let instance_data: Vec<InstanceData> = transformations
-                .into_iter()
-                .map(InstanceData::from_matrix)
+        if !scene.transformations().is_empty() {
+            let instance_data: Vec<InstanceData> = scene
+                .transformations()
+                .iter()
+                .map(|&matrix| InstanceData::from_matrix(matrix))
                 .collect();
 
             self.draw_model_instanced(
                 &mut frame,
-                base,
+                scene.fractal_base(),
                 &instance_data,
                 view_matrix,
                 projection_matrix,
                 camera_pos,
-                light_pos,
+                *scene.light_position(),
                 shading_mode,
             );
         }
@@ -116,12 +115,12 @@ impl Renderer {
         let floor_instance = vec![InstanceData::from_matrix(scale_matrix)];
         self.draw_model_instanced(
             &mut frame,
-            floor,
+            scene.floor(),
             &floor_instance,
             view_matrix,
             projection_matrix,
             camera_pos,
-            light_pos,
+            *scene.light_position(),
             shading_mode,
         );
 

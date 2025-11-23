@@ -1,7 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
 use glium::backend::glutin::SimpleWindowBuilder;
-use glm::Mat4;
 use tobj::Model;
 use winit::{
     application::ApplicationHandler,
@@ -17,6 +16,7 @@ const DELTA_TIME: f32 = 0.1;
 use crate::gui::LSystemConfig;
 use crate::lsystem::LSystem;
 use crate::model_loader::{load_cylinder, load_floor, load_monkey};
+use crate::scene::Scene;
 use crate::turtle::TurtleInterpreter;
 use crate::{
     camera::{FlyCamera, MovementDirection},
@@ -35,10 +35,10 @@ pub struct App {
     renderer: Option<Renderer>,
     camera: Option<FlyCamera>,
     pressed_keys: HashSet<KeyCode>,
-    models: Vec<Model>,
     interaction_mode: AppInteractionMode,
     lsystem_config: Option<LSystemConfig>,
-    transformations: Vec<Mat4>,
+    base_models: Vec<Model>,
+    scene: Option<Scene>,
 }
 
 impl ApplicationHandler for App {
@@ -52,7 +52,13 @@ impl ApplicationHandler for App {
             glm::vec3(0.0, 1.0, 5.0),
             self.renderer.as_ref().unwrap().get_aspect_ratio(),
         ));
-        self.models = vec![load_cylinder(), load_monkey(), load_floor()];
+        self.base_models = vec![load_cylinder(), load_monkey()];
+        self.scene = Some(Scene::new(
+            load_floor(),
+            self.base_models[0].clone(),
+            Vec::new(),
+            [10.0, 10.0, 10.0],
+        ));
 
         self.renderer
             .as_mut()
@@ -194,16 +200,18 @@ impl App {
 
         // TODO some reasonable base models for L-systems
         let model = match renderer.get_gui_controller().get_model_selection() {
-            crate::gui::ModelSelection::Monkey => &self.models[1],
-            crate::gui::ModelSelection::Cylinder => &self.models[0],
+            crate::gui::ModelSelection::Monkey => &self.base_models[1],
+            crate::gui::ModelSelection::Cylinder => &self.base_models[0],
         };
+
+        if model.name != self.scene.as_ref().unwrap().fractal_base().name {
+            self.scene.as_mut().unwrap().set_fractal_base(model.clone());
+        }
 
         let camera = self.camera.as_ref().unwrap();
 
         renderer.render_scene(
-            model,
-            self.transformations.clone(),
-            &self.models[2], // floor
+            self.scene.as_ref().unwrap(),
             &self.interaction_mode,
             camera.get_view_matrix(),
             camera.get_projection_matrix(),
@@ -219,7 +227,10 @@ impl App {
         let lsystem = LSystem::new(&lsystem_config.axiom, production_rules);
         let generated_string = lsystem.generate(lsystem_config.n_iterations);
         let transformations = TurtleInterpreter::interpret(&generated_string, lsystem_config.angle);
-        self.transformations = transformations;
+        self.scene
+            .as_mut()
+            .unwrap()
+            .update_transformations(transformations);
     }
 
     fn get_current_lsystem_config(&self) -> &LSystemConfig {
