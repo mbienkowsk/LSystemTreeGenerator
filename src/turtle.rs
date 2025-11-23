@@ -41,12 +41,8 @@ impl TurtleInterpreter {
                     // Rotation to align +Y with direction
                     let up = glm::vec3(0.0, 1.0, 0.0);
                     let axis = glm::cross(&up, &current_state.direction);
-                    let rotation = if axis.magnitude() > 1e-6 {
-                        let angle = up.dot(&current_state.direction).acos();
-                        glm::rotation(angle, &glm::normalize(&axis))
-                    } else {
-                        glm::Mat4::identity()
-                    };
+                    let angle = up.dot(&current_state.direction).acos();
+                    let rotation = glm::rotation(angle, &glm::normalize(&axis));
 
                     transformations.push(translation * rotation);
                     current_state.position = new_position;
