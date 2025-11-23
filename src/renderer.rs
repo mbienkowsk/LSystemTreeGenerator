@@ -75,6 +75,7 @@ impl Renderer {
     }
 
     // TODO use instanced rendering
+    // TODO render floor
     pub fn render_scene(
         &mut self,
         base: &Model,

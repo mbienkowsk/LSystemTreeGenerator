@@ -1,9 +1,8 @@
 use egui::Context;
-use egui_glium::EguiGlium;
 use egui_glium::egui_winit::egui::ViewportId;
+use egui_glium::EguiGlium;
 use glium::glutin::surface::WindowSurface;
 use glium::{Display, Frame};
-use log::info;
 use winit::event::WindowEvent;
 use winit::event_loop::ActiveEventLoop;
 use winit::window::Window;
@@ -36,8 +35,8 @@ impl Default for LSystemConfig {
 
 #[derive(Debug, PartialEq)]
 pub enum ModelSelection {
+    Cylinder,
     Monkey,
-    Cone,
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -57,7 +56,6 @@ impl From<ShadingMode> for i32 {
     }
 }
 
-
 impl GuiController {
     pub fn new(
         display: &Display<WindowSurface>,
@@ -66,7 +64,7 @@ impl GuiController {
     ) -> Self {
         Self {
             egui_glium: EguiGlium::new(ViewportId::ROOT, display, window, event_loop),
-            model_selection: ModelSelection::Monkey,
+            model_selection: ModelSelection::Cylinder,
             shading_mode: ShadingMode::Phong,
             lsystem_config: LSystemConfig::default(),
         }
@@ -74,6 +72,10 @@ impl GuiController {
 
     pub fn get_lsystem_config(&self) -> &LSystemConfig {
         &self.lsystem_config
+    }
+
+    pub fn get_model_selection(&self) -> &ModelSelection {
+        &self.model_selection
     }
 
     pub fn get_shading_mode(&self) -> &ShadingMode {
@@ -84,17 +86,17 @@ impl GuiController {
         let _ = self.egui_glium.on_event(window, event);
     }
 
-    fn ui_control_panel(model_selection: &mut ModelSelection, shading_mode: &mut ShadingMode, ctx: &Context) {
+    fn ui_control_panel(
+        model_selection: &mut ModelSelection,
+        shading_mode: &mut ShadingMode,
+        ctx: &Context,
+    ) {
         egui::Window::new("Control panel").show(ctx, |ui| {
-            ui.heading("Hello World!");
-            if ui.button("Click").clicked() {
-                info!("Clicked button");
-            }
             egui::ComboBox::from_label("Selected Model")
                 .selected_text(format!("{model_selection:?}"))
                 .show_ui(ui, |ui| {
                     ui.selectable_value(model_selection, ModelSelection::Monkey, "Monkey");
-                    ui.selectable_value(model_selection, ModelSelection::Cone, "Cone");
+                    ui.selectable_value(model_selection, ModelSelection::Cylinder, "Cylinder");
                 });
 
             ui.separator();

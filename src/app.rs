@@ -16,7 +16,7 @@ const DELTA_TIME: f32 = 0.1;
 
 use crate::gui::LSystemConfig;
 use crate::lsystem::LSystem;
-use crate::model_loader::{load_cone, load_cylinder, load_floor, load_monkey};
+use crate::model_loader::{load_cylinder, load_floor, load_monkey};
 use crate::turtle::TurtleInterpreter;
 use crate::{
     camera::{FlyCamera, MovementDirection},
@@ -52,7 +52,7 @@ impl ApplicationHandler for App {
             glm::vec3(0.0, 0.0, 5.0),
             self.renderer.as_ref().unwrap().get_aspect_ratio(),
         ));
-        self.models = vec![load_monkey(), load_cone(), load_floor(), load_cylinder()];
+        self.models = vec![load_cylinder(), load_monkey(), load_floor()];
 
         self.renderer
             .as_mut()
@@ -193,7 +193,10 @@ impl App {
         let renderer = self.renderer.as_mut().unwrap();
 
         // TODO some reasonable base models for L-systems
-        let model = &self.models[3];
+        let model = match renderer.get_gui_controller().get_model_selection() {
+            crate::gui::ModelSelection::Monkey => &self.models[1],
+            crate::gui::ModelSelection::Cylinder => &self.models[0],
+        };
 
         let camera = self.camera.as_ref().unwrap();
 
