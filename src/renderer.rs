@@ -81,8 +81,6 @@ impl Renderer {
         let mut frame = self.display.draw();
         frame.clear_color_and_depth((0.1, 0.1, 0.1, 1.0), 1.0);
 
-        let shading_mode = self.gui.shading_mode;
-
         let model_matrix = Mat4::identity();
 
         for object in objects {
@@ -93,7 +91,6 @@ impl Renderer {
                 view_matrix,
                 projection_matrix,
                 camera_pos,
-                shading_mode,
             );
         }
 
@@ -113,7 +110,6 @@ impl Renderer {
         view_matrix: [[f32; 4]; 4],
         projection_matrix: [[f32; 4]; 4],
         camera_pos: [f32; 3],
-        shading_mode: ShadingMode,
     ) {
         let (vertices, indices) = Self::model_to_vertices_and_indices(model);
         let model_mat3 = Mat3::from_fn(|r, c| model_matrix[r][c]);
@@ -129,7 +125,7 @@ impl Renderer {
         };
 
         let light_pos = [10.0f32, 10.0, 10.0];
-        let shading_mode_int = match shading_mode {
+        let shading_mode_int = match self.gui.shading_mode {
             ShadingMode::Flat => 0i32,
             ShadingMode::Gouraud => 1i32,
             ShadingMode::Phong => 2i32,
