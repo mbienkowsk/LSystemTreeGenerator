@@ -208,8 +208,7 @@ impl App {
     }
 
     fn calculate_transformations(&mut self) {
-        let gui = &self.renderer.as_ref().unwrap().gui;
-        let lsystem_config = gui.get_lsystem_config();
+        let lsystem_config = self.get_current_lsystem_config();
 
         let production_rules: HashMap<char, String> =
             lsystem_config.production_rules.iter().cloned().collect();
@@ -220,6 +219,6 @@ impl App {
     }
 
     fn get_current_lsystem_config(&self) -> &LSystemConfig {
-        self.renderer.as_ref().unwrap().gui.get_lsystem_config()
+        self.renderer.as_ref().unwrap().get_gui_controller().get_lsystem_config()
     }
 }

@@ -17,7 +17,7 @@ pub struct Renderer {
     window: Window,
     display: Display<WindowSurface>,
     program: Program,
-    pub gui: GuiController,
+    gui: GuiController,
 }
 
 impl Renderer {
@@ -35,6 +35,10 @@ impl Renderer {
             program,
             gui,
         }
+    }
+
+    pub fn get_gui_controller(&self) -> &GuiController {
+        &self.gui
     }
 
     pub fn request_redraw(&self) {
