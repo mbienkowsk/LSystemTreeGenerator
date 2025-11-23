@@ -8,6 +8,7 @@ use glium::{
     Depth, DepthTest, Display, DrawParameters, Frame, Program, Surface, implement_vertex, uniform,
 };
 
+use crate::camera::ViewParameters;
 use glm::{Mat4, Vec3};
 use tobj::Model;
 use winit::event_loop::ActiveEventLoop;
@@ -81,9 +82,7 @@ impl Renderer {
         &mut self,
         scene: &Scene,
         interaction_mode: &AppInteractionMode,
-        view_matrix: [[f32; 4]; 4],
-        projection_matrix: [[f32; 4]; 4],
-        camera_pos: [f32; 3],
+        view_parameters: ViewParameters,
     ) {
         let mut frame = self.display.draw();
         frame.clear_color_and_depth((0.1, 0.1, 0.1, 1.0), 1.0);
@@ -101,9 +100,7 @@ impl Renderer {
                 &mut frame,
                 scene.fractal_base(),
                 &instance_data,
-                view_matrix,
-                projection_matrix,
-                camera_pos,
+                &view_parameters,
                 *scene.light_position(),
                 shading_mode,
             );
@@ -117,9 +114,7 @@ impl Renderer {
             &mut frame,
             scene.floor(),
             &floor_instance,
-            view_matrix,
-            projection_matrix,
-            camera_pos,
+            &view_parameters,
             *scene.light_position(),
             shading_mode,
         );
@@ -136,9 +131,7 @@ impl Renderer {
         frame: &mut Frame,
         model: &Model,
         instance_data: &[InstanceData],
-        view_matrix: [[f32; 4]; 4],
-        projection_matrix: [[f32; 4]; 4],
-        camera_pos: [f32; 3],
+        view_parameters: &ViewParameters,
         light_pos: [f32; 3],
         shading_mode: i32,
     ) {
@@ -162,16 +155,21 @@ impl Renderer {
             ..DrawParameters::default()
         };
 
-        frame.draw(
-            (
-                vertex_buffer,
-                instance_buffer.per_instance().unwrap(),
-                ),
-            index_buffer,
-            &self.program,
-            &uniform! {view: view_matrix, projection: projection_matrix, u_light_pos: light_pos, u_view_pos: camera_pos, u_shading_mode: shading_mode},
-            &params,
-        ).expect("Failed to draw frame");
+        frame
+            .draw(
+                (vertex_buffer, instance_buffer.per_instance().unwrap()),
+                index_buffer,
+                &self.program,
+                &uniform! {
+                    view: view_parameters.view_matrix,
+                    projection: view_parameters.projection_matrix,
+                    u_light_pos: light_pos,
+                    u_view_pos: view_parameters.camera_position,
+                    u_shading_mode: shading_mode
+                },
+                &params,
+            )
+            .expect("Failed to draw frame");
     }
 
     fn model_to_vertices_and_indices(model: &Model) -> (Vec<Vertex>, Vec<u32>) {

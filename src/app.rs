@@ -213,9 +213,7 @@ impl App {
         renderer.render_scene(
             self.scene.as_ref().unwrap(),
             &self.interaction_mode,
-            camera.get_view_matrix(),
-            camera.get_projection_matrix(),
-            camera.get_position(),
+            camera.view_parameters(),
         );
     }
 
