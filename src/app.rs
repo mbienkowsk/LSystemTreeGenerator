@@ -195,12 +195,15 @@ impl App {
         // TODO some reasonable base models for L-systems
         let model = &self.models[3];
 
+        let camera = self.camera.as_ref().unwrap();
+
         renderer.render_scene(
             model,
             self.transformations.clone(),
             &self.interaction_mode,
-            self.camera.as_ref().unwrap().get_view_matrix(),
-            self.camera.as_ref().unwrap().get_projection_matrix(),
+            camera.get_view_matrix(),
+            camera.get_projection_matrix(),
+            camera.get_position(),
         );
     }
 

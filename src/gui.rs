@@ -1,4 +1,3 @@
-// rust
 use egui::Context;
 use egui_glium::EguiGlium;
 use egui_glium::egui_winit::egui::ViewportId;
@@ -13,6 +12,7 @@ pub struct GuiController {
     egui_glium: EguiGlium,
     model_selection: ModelSelection,
     lsystem_config: LSystemConfig,
+    pub shading_mode: ShadingMode,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -40,6 +40,14 @@ pub enum ModelSelection {
     Cone,
 }
 
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum ShadingMode {
+    Flat,
+    Gouraud,
+    Phong,
+}
+
+
 impl GuiController {
     pub fn new(
         display: &Display<WindowSurface>,
@@ -49,6 +57,7 @@ impl GuiController {
         Self {
             egui_glium: EguiGlium::new(ViewportId::ROOT, display, window, event_loop),
             model_selection: ModelSelection::Monkey,
+            shading_mode: ShadingMode::Phong,
             lsystem_config: LSystemConfig::default(),
         }
     }
@@ -61,7 +70,7 @@ impl GuiController {
         let _ = self.egui_glium.on_event(window, event);
     }
 
-    fn ui_control_panel(model_selection: &mut ModelSelection, ctx: &Context) {
+    fn ui_control_panel(model_selection: &mut ModelSelection, shading_mode: &mut ShadingMode, ctx: &Context) {
         egui::Window::new("Control panel").show(ctx, |ui| {
             ui.heading("Hello World!");
             if ui.button("Click").clicked() {
@@ -73,6 +82,13 @@ impl GuiController {
                     ui.selectable_value(model_selection, ModelSelection::Monkey, "Monkey");
                     ui.selectable_value(model_selection, ModelSelection::Cone, "Cone");
                 });
+
+            ui.separator();
+            ui.label("Shading Mode:");
+            ui.radio_value(shading_mode, ShadingMode::Flat, "Flat");
+            ui.radio_value(shading_mode, ShadingMode::Gouraud, "Gouraud");
+            ui.radio_value(shading_mode, ShadingMode::Phong, "Phong");
+            ui.separator();
         });
     }
 
@@ -95,10 +111,11 @@ impl GuiController {
 
     pub fn draw(&mut self, window: &Window, display: &Display<WindowSurface>, frame: &mut Frame) {
         let model_selection = &mut self.model_selection;
+        let shading_mode = &mut self.shading_mode;
         let lsystem_config = &mut self.lsystem_config;
 
         self.egui_glium.run(window, |ctx| {
-            GuiController::ui_control_panel(model_selection, ctx);
+            GuiController::ui_control_panel(model_selection, shading_mode, ctx);
             GuiController::ui_lsystem_config(lsystem_config, ctx);
         });
         self.egui_glium.paint(display, frame);
