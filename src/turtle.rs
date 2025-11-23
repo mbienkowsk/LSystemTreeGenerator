@@ -1,5 +1,6 @@
 // TODO rotations in 3D
 // Probably will have to use quaternions for that
+// Implement symbols &, ^, \, /
 
 pub struct TurtleInterpreter {}
 
