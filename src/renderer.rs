@@ -1,12 +1,13 @@
 use crate::app::AppInteractionMode;
-use crate::gui::{GuiController, ShadingMode};
+use crate::gui::{GuiController};
 use crate::shaders::make_shader_program;
 
 use glium::glutin::surface::WindowSurface;
 use glium::{
     Depth, DepthTest, Display, DrawParameters, Frame, Program, Surface, implement_vertex, uniform,
 };
-use glm::{Mat3, Mat4};
+
+use glm::{Mat4, Vec3};
 use tobj::Model;
 use winit::event_loop::ActiveEventLoop;
 use winit::window::Window;
@@ -111,7 +112,8 @@ impl Renderer {
 
         // There is overhead in using instanced rendering for a single instance
         // But it is simpler this way
-        let floor_instance = vec![InstanceData::from_matrix(Mat4::identity())];
+        let scale_matrix = glm::scale(&Mat4::identity(), &Vec3::new(10.0, 1.0, 10.0));
+        let floor_instance = vec![InstanceData::from_matrix(scale_matrix)];
         self.draw_model_instanced(
             &mut frame,
             floor,
