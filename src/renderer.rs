@@ -77,7 +77,6 @@ impl Renderer {
         }
     }
 
-    // TODO render floor
     pub fn render_scene(
         &mut self,
         scene: &Scene,
