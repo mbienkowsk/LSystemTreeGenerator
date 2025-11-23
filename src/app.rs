@@ -182,14 +182,13 @@ impl App {
         };
 
         let camera = self.camera.as_ref().unwrap();
-        let cam_pos = camera.get_position();
 
         renderer.render_scene(
             std::slice::from_ref(model),
             &self.interaction_mode,
-            self.camera.as_ref().unwrap().get_view_matrix(),
-            self.camera.as_ref().unwrap().get_projection_matrix(),
-            cam_pos,
+            camera.get_view_matrix(),
+            camera.get_projection_matrix(),
+            camera.get_position(),
         );
     }
 }
