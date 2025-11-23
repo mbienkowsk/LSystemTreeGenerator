@@ -1,5 +1,5 @@
 use crate::app::AppInteractionMode;
-use crate::gui::GuiController;
+use crate::gui::{GuiController, ShadingMode};
 use crate::shaders::make_shader_program;
 
 use glium::glutin::surface::WindowSurface;
@@ -87,6 +87,9 @@ impl Renderer {
         let mut frame = self.display.draw();
         frame.clear_color_and_depth((0.1, 0.1, 0.1, 1.0), 1.0);
 
+        let shading_mode = i32::from(*self.gui.get_shading_mode());
+        let light_pos = [10.0f32, 10.0, 10.0];
+
         if !transformations.is_empty() {
             let instance_data: Vec<InstanceData> = transformations
                 .into_iter()
@@ -100,6 +103,8 @@ impl Renderer {
                 view_matrix,
                 projection_matrix,
                 camera_pos,
+                light_pos,
+                shading_mode,
             );
         }
 
@@ -159,6 +164,8 @@ impl Renderer {
         view_matrix: [[f32; 4]; 4],
         projection_matrix: [[f32; 4]; 4],
         camera_pos: [f32; 3],
+        light_pos: [f32; 3],
+        shading_mode: i32,
     ) {
         let (vertices, indices) = Self::model_to_vertices_and_indices(model);
 
@@ -179,9 +186,6 @@ impl Renderer {
             },
             ..DrawParameters::default()
         };
-
-        let light_pos = [10.0f32, 10.0, 10.0];
-        let shading_mode = i32::from(*self.gui.get_shading_mode());
 
         frame.draw(
             (
