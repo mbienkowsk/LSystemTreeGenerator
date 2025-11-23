@@ -108,6 +108,7 @@ impl GuiController {
         });
     }
 
+    // TODO make editable
     fn ui_lsystem_config(lsystem_config: &mut LSystemConfig, ctx: &Context) {
         egui::Window::new("LSystem Configuration").show(ctx, |ui| {
             ui.add(
