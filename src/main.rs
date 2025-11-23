@@ -5,9 +5,11 @@ extern crate nalgebra_glm as glm;
 mod app;
 mod camera;
 mod gui;
+mod lsystem;
 mod model_loader;
 mod renderer;
 mod shaders;
+mod turtle;
 
 fn main() {
     env_logger::init();

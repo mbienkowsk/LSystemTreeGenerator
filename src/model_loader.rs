@@ -18,18 +18,19 @@ pub fn load_monkey() -> Model {
     load_obj_file("assets/models/monkey.obj")
 }
 
-pub fn load_cone() -> Model {
-    load_obj_file("assets/models/cone.obj")
-}
 
 pub fn load_floor() -> Model {
     load_obj_file("assets/models/floor.obj")
 }
 
+pub fn load_cylinder() -> Model {
+    load_obj_file("assets/models/cylinder.obj")
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::model_loader::load_monkey;
     use tobj::Model;
+    use crate::model_loader;
 
     fn display_model_info(model: &Model) {
         println!("Model name: {}", model.name);
@@ -47,23 +48,23 @@ mod tests {
 
     #[test]
     fn monkey_loads_correctly() {
-        let monkey_model = load_monkey();
-
+        let monkey_model = model_loader::load_monkey();
         display_model_info(&monkey_model);
         check_if_model_loaded_correctly(&monkey_model);
     }
 
-    #[test]
-    fn cone_loads_correctly() {
-        let cone_model = crate::model_loader::load_cone();
-        display_model_info(&cone_model);
-        check_if_model_loaded_correctly(&cone_model);
-    }
 
     #[test]
     fn floor_loads_correctly() {
-        let floor_model = crate::model_loader::load_floor();
+        let floor_model = model_loader::load_floor();
         display_model_info(&floor_model);
         check_if_model_loaded_correctly(&floor_model);
+    }
+
+    #[test]
+    fn cylinder_loads_correctly() {
+        let cylinder_model = model_loader::load_cylinder();
+        display_model_info(&cylinder_model);
+        check_if_model_loaded_correctly(&cylinder_model);
     }
 }

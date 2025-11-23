@@ -1,10 +1,10 @@
 use crate::app::AppInteractionMode;
 use crate::gui::GuiController;
-use crate::gui::ShadingMode;
 use crate::shaders::make_shader_program;
+
 use glium::glutin::surface::WindowSurface;
 use glium::{
-    Depth, DepthTest, Display, DrawParameters, Frame, Program, Surface, implement_vertex, uniform,
+    implement_vertex, uniform, Depth, DepthTest, Display, DrawParameters, Frame, Program, Surface,
 };
 use glm::{Mat3, Mat4};
 use tobj::Model;
@@ -15,7 +15,7 @@ pub struct Renderer {
     window: Window,
     display: Display<WindowSurface>,
     program: Program,
-    pub gui: GuiController,
+    gui: GuiController,
 }
 
 impl Renderer {
@@ -33,6 +33,10 @@ impl Renderer {
             program,
             gui,
         }
+    }
+
+    pub fn get_gui_controller(&self) -> &GuiController {
+        &self.gui
     }
 
     pub fn request_redraw(&self) {
@@ -70,9 +74,12 @@ impl Renderer {
         }
     }
 
+    // TODO use instanced rendering
+    // TODO render floor
     pub fn render_scene(
         &mut self,
-        objects: &[Model],
+        base: &Model,
+        transformations: Vec<Mat4>,
         interaction_mode: &AppInteractionMode,
         view_matrix: [[f32; 4]; 4],
         projection_matrix: [[f32; 4]; 4],
@@ -81,12 +88,10 @@ impl Renderer {
         let mut frame = self.display.draw();
         frame.clear_color_and_depth((0.1, 0.1, 0.1, 1.0), 1.0);
 
-        let model_matrix = Mat4::identity();
-
-        for object in objects {
+        for model_matrix in transformations {
             self.draw_model(
                 &mut frame,
-                object,
+                base,
                 model_matrix.into(),
                 view_matrix,
                 projection_matrix,
@@ -95,8 +100,7 @@ impl Renderer {
         }
 
         if *interaction_mode == AppInteractionMode::GuiInteraction {
-            self.gui.draw_ui(&self.window);
-            self.gui.egui_glium.paint(&self.display, &mut frame);
+            self.gui.draw(&self.window, &self.display, &mut frame);
         }
 
         frame.finish().expect("Failed to destroy frame");
@@ -125,11 +129,7 @@ impl Renderer {
         };
 
         let light_pos = [10.0f32, 10.0, 10.0];
-        let shading_mode_int = match self.gui.shading_mode {
-            ShadingMode::Flat => 0i32,
-            ShadingMode::Gouraud => 1i32,
-            ShadingMode::Phong => 2i32,
-        };
+        let shading_mode = i32::from(*self.gui.get_shading_mode());
 
         frame
             .draw(
@@ -141,7 +141,7 @@ impl Renderer {
                 )
                     .unwrap(),
                 &self.program,
-                &uniform! {model: model_matrix, view: view_matrix, projection: projection_matrix, normal_matrix: normal_matrix, u_light_pos: light_pos, u_view_pos: camera_pos, u_shading_mode: shading_mode_int},
+                &uniform! {model: model_matrix, view: view_matrix, projection: projection_matrix, normal_matrix: normal_matrix, u_light_pos: light_pos, u_view_pos: camera_pos, u_shading_mode: shading_mode},
                 &params,
             )
             .expect("Failed to draw frame");

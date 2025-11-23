@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use glium::backend::glutin::SimpleWindowBuilder;
+use glm::Mat4;
 use tobj::Model;
 use winit::{
     application::ApplicationHandler,
@@ -13,7 +14,10 @@ use winit::{
 // TODO: this could probably be calculated based on time since last frame instead
 const DELTA_TIME: f32 = 0.1;
 
-use crate::model_loader::{load_cone, load_floor, load_monkey};
+use crate::gui::LSystemConfig;
+use crate::lsystem::LSystem;
+use crate::model_loader::{load_cylinder, load_floor, load_monkey};
+use crate::turtle::TurtleInterpreter;
 use crate::{
     camera::{FlyCamera, MovementDirection},
     renderer::Renderer,
@@ -33,6 +37,8 @@ pub struct App {
     pressed_keys: HashSet<KeyCode>,
     models: Vec<Model>,
     interaction_mode: AppInteractionMode,
+    lsystem_config: Option<LSystemConfig>,
+    transformations: Vec<Mat4>,
 }
 
 impl ApplicationHandler for App {
@@ -46,12 +52,15 @@ impl ApplicationHandler for App {
             glm::vec3(0.0, 0.0, 5.0),
             self.renderer.as_ref().unwrap().get_aspect_ratio(),
         ));
-        self.models = vec![load_monkey(), load_cone(), load_floor()];
+        self.models = vec![load_cylinder(), load_monkey(), load_floor()];
 
         self.renderer
             .as_mut()
             .unwrap()
             .handle_interaction_mode_change(&self.interaction_mode);
+
+        self.lsystem_config = Some(self.get_current_lsystem_config().clone());
+        self.calculate_transformations();
     }
 
     fn window_event(
@@ -77,6 +86,13 @@ impl ApplicationHandler for App {
             WindowEvent::RedrawRequested => {
                 if self.renderer.is_none() {
                     return;
+                }
+
+                let new_lsystem_config = self.get_current_lsystem_config();
+                if new_lsystem_config != self.lsystem_config.as_ref().unwrap() {
+                    log::info!("L-System config changed to {new_lsystem_config:?}");
+                    self.lsystem_config = Some(new_lsystem_config.clone());
+                    self.calculate_transformations();
                 }
 
                 self.render_scene();
@@ -176,19 +192,36 @@ impl App {
     fn render_scene(&mut self) {
         let renderer = self.renderer.as_mut().unwrap();
 
-        let model = match renderer.gui.get_model_selection() {
-            crate::gui::ModelSelection::Monkey => &self.models[0],
-            crate::gui::ModelSelection::Cone => &self.models[1],
+        // TODO some reasonable base models for L-systems
+        let model = match renderer.get_gui_controller().get_model_selection() {
+            crate::gui::ModelSelection::Monkey => &self.models[1],
+            crate::gui::ModelSelection::Cylinder => &self.models[0],
         };
 
         let camera = self.camera.as_ref().unwrap();
 
         renderer.render_scene(
-            std::slice::from_ref(model),
+            model,
+            self.transformations.clone(),
             &self.interaction_mode,
             camera.get_view_matrix(),
             camera.get_projection_matrix(),
             camera.get_position(),
         );
+    }
+
+    fn calculate_transformations(&mut self) {
+        let lsystem_config = self.get_current_lsystem_config();
+
+        let production_rules: HashMap<char, String> =
+            lsystem_config.production_rules.iter().cloned().collect();
+        let lsystem = LSystem::new(&lsystem_config.axiom, production_rules);
+        let generated_string = lsystem.generate(lsystem_config.n_iterations);
+        let transformations = TurtleInterpreter::interpret(&generated_string, lsystem_config.angle);
+        self.transformations = transformations;
+    }
+
+    fn get_current_lsystem_config(&self) -> &LSystemConfig {
+        self.renderer.as_ref().unwrap().get_gui_controller().get_lsystem_config()
     }
 }
