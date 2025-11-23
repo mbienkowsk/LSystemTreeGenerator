@@ -81,7 +81,7 @@ impl Renderer {
         &mut self,
         scene: &Scene,
         interaction_mode: &AppInteractionMode,
-        view_parameters: ViewParameters,
+        view_parameters: &ViewParameters,
     ) {
         let mut frame = self.display.draw();
         frame.clear_color_and_depth((0.1, 0.1, 0.1, 1.0), 1.0);
@@ -99,7 +99,7 @@ impl Renderer {
                 &mut frame,
                 scene.fractal_base(),
                 &instance_data,
-                &view_parameters,
+                view_parameters,
                 *scene.light_position(),
                 shading_mode,
             );
@@ -113,7 +113,7 @@ impl Renderer {
             &mut frame,
             scene.floor(),
             &floor_instance,
-            &view_parameters,
+            view_parameters,
             *scene.light_position(),
             shading_mode,
         );

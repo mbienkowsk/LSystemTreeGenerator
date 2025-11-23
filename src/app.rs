@@ -213,7 +213,7 @@ impl App {
         renderer.render_scene(
             self.scene.as_ref().unwrap(),
             &self.interaction_mode,
-            camera.view_parameters(),
+            &camera.view_parameters(),
         );
     }
 
