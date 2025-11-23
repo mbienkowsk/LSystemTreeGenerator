@@ -154,18 +154,20 @@ impl Renderer {
             ..DrawParameters::default()
         };
 
+        let uniforms = &uniform! {
+            view: view_parameters.view_matrix,
+            projection: view_parameters.projection_matrix,
+            u_light_pos: light_pos,
+            u_view_pos: view_parameters.camera_position,
+            u_shading_mode: shading_mode
+        };
+
         frame
             .draw(
                 (vertex_buffer, instance_buffer.per_instance().unwrap()),
                 index_buffer,
                 &self.program,
-                &uniform! {
-                    view: view_parameters.view_matrix,
-                    projection: view_parameters.projection_matrix,
-                    u_light_pos: light_pos,
-                    u_view_pos: view_parameters.camera_position,
-                    u_shading_mode: shading_mode
-                },
+                uniforms,
                 &params,
             )
             .expect("Failed to draw frame");
