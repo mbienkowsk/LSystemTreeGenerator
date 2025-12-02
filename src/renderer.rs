@@ -207,30 +207,16 @@ pub struct Vertex {
 implement_vertex!(Vertex, position, normal);
 
 #[derive(Copy, Clone)]
-#[allow(clippy::struct_field_names)]
 pub struct InstanceData {
-    model_matrix_0: [f32; 4],
-    model_matrix_1: [f32; 4],
-    model_matrix_2: [f32; 4],
-    model_matrix_3: [f32; 4],
+    model_matrix: [[f32; 4]; 4],
 }
 
-implement_vertex!(
-    InstanceData,
-    model_matrix_0,
-    model_matrix_1,
-    model_matrix_2,
-    model_matrix_3
-);
+implement_vertex!(InstanceData, model_matrix);
 
 impl InstanceData {
     fn from_matrix(matrix: Mat4) -> Self {
-        let m: [[f32; 4]; 4] = matrix.into();
         Self {
-            model_matrix_0: m[0],
-            model_matrix_1: m[1],
-            model_matrix_2: m[2],
-            model_matrix_3: m[3],
+            model_matrix: matrix.into(),
         }
     }
 }
