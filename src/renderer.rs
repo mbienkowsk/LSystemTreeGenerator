@@ -88,6 +88,8 @@ impl Renderer {
 
         let shading_mode = i32::from(*self.gui.get_shading_mode());
 
+        let fractal_total_height = scene.fractal_total_height();
+
         if !scene.transformations().is_empty() {
             let instance_data: Vec<InstanceData> = scene
                 .transformations()
@@ -102,6 +104,7 @@ impl Renderer {
                 view_parameters,
                 *scene.light_position(),
                 shading_mode,
+                fractal_total_height,
             );
         }
 
@@ -116,6 +119,7 @@ impl Renderer {
             view_parameters,
             *scene.light_position(),
             shading_mode,
+            1.0
         );
 
         if *interaction_mode == AppInteractionMode::GuiInteraction {
@@ -133,6 +137,7 @@ impl Renderer {
         view_parameters: &ViewParameters,
         light_pos: [f32; 3],
         shading_mode: i32,
+        total_fractal_height: f32,
     ) {
         let (vertices, indices) = Self::model_to_vertices_and_indices(model);
 
@@ -156,7 +161,7 @@ impl Renderer {
 
         let interpolation_color_low = [0.28f32, 0.14f32, 0.01f32];
         let interpolation_color_high = [0.08f32, 0.2f32, 0.01f32];
-        let total_height = 10.0f32;
+
 
         let uniforms = &uniform! {
             view: view_parameters.view_matrix,
@@ -166,7 +171,7 @@ impl Renderer {
             u_shading_mode: shading_mode,
             u_interpolation_color_low: interpolation_color_low,
             u_interpolation_color_high: interpolation_color_high,
-            u_total_height: total_height,
+            u_total_height: total_fractal_height,
         };
 
         frame
