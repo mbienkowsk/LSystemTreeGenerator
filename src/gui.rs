@@ -12,8 +12,8 @@ pub struct GuiController {
     model_selection: ModelSelection,
     lsystem_config: LSystemConfig,
     shading_mode: ShadingMode,
-    pub interpolation_color_low: [f32; 3],
-    pub interpolation_color_high: [f32; 3],
+    interpolation_color_low: [f32; 3],
+    interpolation_color_high: [f32; 3],
 }
 
 #[derive(Debug, Clone, PartialEq)]
