@@ -8,12 +8,18 @@ out vec4 color;
 uniform vec3 u_light_pos;
 uniform vec3 u_view_pos;
 uniform int u_shading_mode; // 0 = Flat, 1 = Gouraud, 2 = Phong
+uniform vec3 u_interpolation_color_low;
+uniform vec3 u_interpolation_color_high;
+uniform float u_total_height;
 
-const vec3 object_color = vec3(1.0, 0.0, 0.0);
 const vec3 light_color = vec3(1.0, 1.0, 1.0);
 const vec3 dark_color = vec3(0.0, 0.0, 0.0);
 
 void main() {
+    // Interpolate the object color based on height
+    float height_factor = clamp(v_position.y / u_total_height, 0.0, 1.0);
+    vec3 object_color = mix(u_interpolation_color_low, u_interpolation_color_high, height_factor);
+    
     // flat
     if (u_shading_mode == 0) {
         color = vec4(object_color, 1.0);

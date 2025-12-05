@@ -154,12 +154,19 @@ impl Renderer {
             ..DrawParameters::default()
         };
 
+        let interpolation_color_low = [0.28f32, 0.14f32, 0.01f32];
+        let interpolation_color_high = [0.08f32, 0.2f32, 0.01f32];
+        let total_height = 10.0f32;
+
         let uniforms = &uniform! {
             view: view_parameters.view_matrix,
             projection: view_parameters.projection_matrix,
             u_light_pos: light_pos,
             u_view_pos: view_parameters.camera_position,
-            u_shading_mode: shading_mode
+            u_shading_mode: shading_mode,
+            u_interpolation_color_low: interpolation_color_low,
+            u_interpolation_color_high: interpolation_color_high,
+            u_total_height: total_height,
         };
 
         frame
