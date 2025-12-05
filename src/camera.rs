@@ -45,16 +45,16 @@ impl FlyCamera {
         }
     }
 
-    pub fn get_view_matrix(&self) -> [[f32; 4]; 4] {
+    fn get_view_matrix(&self) -> [[f32; 4]; 4] {
         let view_matrix = glm::look_at(&self.position, &(self.position + self.front), &WORLD_UP);
         view_matrix.into()
     }
 
-    pub fn get_position(&self) -> [f32; 3] {
+    fn get_position(&self) -> [f32; 3] {
         [self.position.x, self.position.y, self.position.z]
     }
 
-    pub fn get_projection_matrix(&self) -> [[f32; 4]; 4] {
+    fn get_projection_matrix(&self) -> [[f32; 4]; 4] {
         let projection_matrix = glm::perspective_rh_zo(
             self.aspect_ratio,
             self.fovy.to_radians(),
@@ -109,6 +109,14 @@ impl FlyCamera {
         self.update_pitch(yoffset);
         self.update_front();
     }
+
+    pub fn view_parameters(&self) -> ViewParameters {
+        ViewParameters {
+            view_matrix: self.get_view_matrix(),
+            projection_matrix: self.get_projection_matrix(),
+            camera_position: self.get_position(),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -119,4 +127,10 @@ pub enum MovementDirection {
     Right,
     Up,
     Down,
+}
+
+pub struct ViewParameters {
+    pub view_matrix: [[f32; 4]; 4],
+    pub projection_matrix: [[f32; 4]; 4],
+    pub camera_position: [f32; 3],
 }

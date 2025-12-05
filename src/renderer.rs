@@ -1,12 +1,15 @@
 use crate::app::AppInteractionMode;
 use crate::gui::GuiController;
+use crate::scene::Scene;
 use crate::shaders::make_shader_program;
 
 use glium::glutin::surface::WindowSurface;
 use glium::{
-    implement_vertex, uniform, Depth, DepthTest, Display, DrawParameters, Frame, Program, Surface,
+    Depth, DepthTest, Display, DrawParameters, Frame, Program, Surface, implement_vertex, uniform,
 };
-use glm::{Mat3, Mat4};
+
+use crate::camera::ViewParameters;
+use glm::{Mat4, Vec3};
 use tobj::Model;
 use winit::event_loop::ActiveEventLoop;
 use winit::window::Window;
@@ -74,30 +77,46 @@ impl Renderer {
         }
     }
 
-    // TODO use instanced rendering
-    // TODO render floor
     pub fn render_scene(
         &mut self,
-        base: &Model,
-        transformations: Vec<Mat4>,
+        scene: &Scene,
         interaction_mode: &AppInteractionMode,
-        view_matrix: [[f32; 4]; 4],
-        projection_matrix: [[f32; 4]; 4],
-        camera_pos: [f32; 3],
+        view_parameters: &ViewParameters,
     ) {
         let mut frame = self.display.draw();
         frame.clear_color_and_depth((0.1, 0.1, 0.1, 1.0), 1.0);
 
-        for model_matrix in transformations {
-            self.draw_model(
+        let shading_mode = i32::from(*self.gui.get_shading_mode());
+
+        if !scene.transformations().is_empty() {
+            let instance_data: Vec<InstanceData> = scene
+                .transformations()
+                .iter()
+                .map(|&matrix| InstanceData::from_matrix(matrix))
+                .collect();
+
+            self.draw_model_instanced(
                 &mut frame,
-                base,
-                model_matrix.into(),
-                view_matrix,
-                projection_matrix,
-                camera_pos,
+                scene.fractal_base(),
+                &instance_data,
+                view_parameters,
+                *scene.light_position(),
+                shading_mode,
             );
         }
+
+        // There is overhead in using instanced rendering for a single instance
+        // But it is simpler this way
+        let scale_matrix = glm::scale(&Mat4::identity(), &Vec3::new(10.0, 1.0, 10.0));
+        let floor_instance = vec![InstanceData::from_matrix(scale_matrix)];
+        self.draw_model_instanced(
+            &mut frame,
+            scene.floor(),
+            &floor_instance,
+            view_parameters,
+            *scene.light_position(),
+            shading_mode,
+        );
 
         if *interaction_mode == AppInteractionMode::GuiInteraction {
             self.gui.draw(&self.window, &self.display, &mut frame);
@@ -106,18 +125,25 @@ impl Renderer {
         frame.finish().expect("Failed to destroy frame");
     }
 
-    pub fn draw_model(
+    pub fn draw_model_instanced(
         &mut self,
         frame: &mut Frame,
         model: &Model,
-        model_matrix: [[f32; 4]; 4],
-        view_matrix: [[f32; 4]; 4],
-        projection_matrix: [[f32; 4]; 4],
-        camera_pos: [f32; 3],
+        instance_data: &[InstanceData],
+        view_parameters: &ViewParameters,
+        light_pos: [f32; 3],
+        shading_mode: i32,
     ) {
         let (vertices, indices) = Self::model_to_vertices_and_indices(model);
-        let model_mat3 = Mat3::from_fn(|r, c| model_matrix[r][c]);
-        let normal_matrix: [[f32; 3]; 3] = glm::inverse_transpose(model_mat3).into();
+
+        let vertex_buffer = &glium::VertexBuffer::new(&self.display, &vertices).unwrap();
+        let instance_buffer = glium::VertexBuffer::new(&self.display, instance_data).unwrap();
+        let index_buffer = &glium::IndexBuffer::new(
+            &self.display,
+            glium::index::PrimitiveType::TrianglesList,
+            &indices,
+        )
+        .unwrap();
 
         let params = DrawParameters {
             depth: Depth {
@@ -128,20 +154,20 @@ impl Renderer {
             ..DrawParameters::default()
         };
 
-        let light_pos = [10.0f32, 10.0, 10.0];
-        let shading_mode = i32::from(*self.gui.get_shading_mode());
+        let uniforms = &uniform! {
+            view: view_parameters.view_matrix,
+            projection: view_parameters.projection_matrix,
+            u_light_pos: light_pos,
+            u_view_pos: view_parameters.camera_position,
+            u_shading_mode: shading_mode
+        };
 
         frame
             .draw(
-                &glium::VertexBuffer::new(&self.display, &vertices).unwrap(),
-                &glium::IndexBuffer::new(
-                    &self.display,
-                    glium::index::PrimitiveType::TrianglesList,
-                    &indices,
-                )
-                    .unwrap(),
+                (vertex_buffer, instance_buffer.per_instance().unwrap()),
+                index_buffer,
                 &self.program,
-                &uniform! {model: model_matrix, view: view_matrix, projection: projection_matrix, normal_matrix: normal_matrix, u_light_pos: light_pos, u_view_pos: camera_pos, u_shading_mode: shading_mode},
+                uniforms,
                 &params,
             )
             .expect("Failed to draw frame");
@@ -179,3 +205,18 @@ pub struct Vertex {
     normal: [f32; 3],
 }
 implement_vertex!(Vertex, position, normal);
+
+#[derive(Copy, Clone)]
+pub struct InstanceData {
+    model_matrix: [[f32; 4]; 4],
+}
+
+implement_vertex!(InstanceData, model_matrix);
+
+impl InstanceData {
+    fn from_matrix(matrix: Mat4) -> Self {
+        Self {
+            model_matrix: matrix.into(),
+        }
+    }
+}

@@ -1,6 +1,6 @@
 use egui::Context;
-use egui_glium::egui_winit::egui::ViewportId;
 use egui_glium::EguiGlium;
+use egui_glium::egui_winit::egui::ViewportId;
 use glium::glutin::surface::WindowSurface;
 use glium::{Display, Frame};
 use winit::event::WindowEvent;
