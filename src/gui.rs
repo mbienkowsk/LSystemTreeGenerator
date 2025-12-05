@@ -12,6 +12,8 @@ pub struct GuiController {
     model_selection: ModelSelection,
     lsystem_config: LSystemConfig,
     shading_mode: ShadingMode,
+    pub interpolation_color_low: [f32; 3],
+    pub interpolation_color_high: [f32; 3],
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -67,6 +69,8 @@ impl GuiController {
             model_selection: ModelSelection::Cylinder,
             shading_mode: ShadingMode::Phong,
             lsystem_config: LSystemConfig::default(),
+            interpolation_color_low: [0.28, 0.14, 0.01],
+            interpolation_color_high: [0.08, 0.2, 0.01],
         }
     }
 
@@ -80,6 +84,10 @@ impl GuiController {
 
     pub fn get_shading_mode(&self) -> &ShadingMode {
         &self.shading_mode
+    }
+
+    pub fn get_interpolation_colors(&self) -> ([f32; 3], [f32; 3]) {
+        (self.interpolation_color_low, self.interpolation_color_high)
     }
 
     pub fn handle_event(&mut self, event: &WindowEvent, window: &Window) {
@@ -126,14 +134,30 @@ impl GuiController {
         });
     }
 
+    fn ui_color_panel(
+        interpolation_color_low: &mut [f32; 3],
+        interpolation_color_high: &mut [f32; 3],
+        ctx: &Context,
+    ) {
+        egui::Window::new("Color Configuration").show(ctx, |ui| {
+            ui.label("Color - low");
+            ui.color_edit_button_rgb(interpolation_color_low);
+            ui.label("Color - high");
+            ui.color_edit_button_rgb(interpolation_color_high);
+        });
+    }
+
     pub fn draw(&mut self, window: &Window, display: &Display<WindowSurface>, frame: &mut Frame) {
         let model_selection = &mut self.model_selection;
         let shading_mode = &mut self.shading_mode;
         let lsystem_config = &mut self.lsystem_config;
+        let color_low = &mut self.interpolation_color_low;
+        let color_high = &mut self.interpolation_color_high;
 
         self.egui_glium.run(window, |ctx| {
             GuiController::ui_control_panel(model_selection, shading_mode, ctx);
             GuiController::ui_lsystem_config(lsystem_config, ctx);
+            GuiController::ui_color_panel(color_low, color_high, ctx);
         });
         self.egui_glium.paint(display, frame);
     }

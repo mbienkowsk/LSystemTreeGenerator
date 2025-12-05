@@ -87,6 +87,8 @@ impl Renderer {
         frame.clear_color_and_depth((0.1, 0.1, 0.1, 1.0), 1.0);
 
         let shading_mode = i32::from(*self.gui.get_shading_mode());
+        let (interpolation_color_low, interpolation_color_high) =
+            self.gui.get_interpolation_colors();
 
         let fractal_total_height = scene.fractal_total_height();
 
@@ -105,6 +107,8 @@ impl Renderer {
                 *scene.light_position(),
                 shading_mode,
                 fractal_total_height,
+                interpolation_color_low,
+                interpolation_color_high,
             );
         }
 
@@ -120,6 +124,8 @@ impl Renderer {
             *scene.light_position(),
             shading_mode,
             1.0,
+            interpolation_color_low,
+            interpolation_color_high,
         );
 
         if *interaction_mode == AppInteractionMode::GuiInteraction {
@@ -139,6 +145,8 @@ impl Renderer {
         light_pos: [f32; 3],
         shading_mode: i32,
         total_fractal_height: f32,
+        interpolation_color_low: [f32; 3],
+        interpolation_color_high: [f32; 3],
     ) {
         let (vertices, indices) = Self::model_to_vertices_and_indices(model);
 
@@ -159,10 +167,6 @@ impl Renderer {
             },
             ..DrawParameters::default()
         };
-
-        // TODO configure colors in the GUI
-        let interpolation_color_low = [0.28f32, 0.14f32, 0.01f32];
-        let interpolation_color_high = [0.08f32, 0.2f32, 0.01f32];
 
         let uniforms = &uniform! {
             view: view_parameters.view_matrix,
