@@ -1,17 +1,18 @@
+use crate::model_loader::Model3D;
 use glm::{Mat4, Vec4};
 use tobj::Model;
 
 pub struct Scene {
-    floor: Model,
-    fractal_base: Model,
+    floor: Model3D,
+    fractal_base: Model3D,
     transformations: Vec<Mat4>,
     light_position: [f32; 3],
 }
 
 impl Scene {
     pub fn new(
-        floor: Model,
-        fractal_base: Model,
+        floor: Model3D,
+        fractal_base: Model3D,
         transformations: Vec<Mat4>,
         light_position: [f32; 3],
     ) -> Self {
@@ -23,11 +24,11 @@ impl Scene {
         }
     }
 
-    pub fn floor(&self) -> &Model {
+    pub fn floor(&self) -> &Model3D {
         &self.floor
     }
 
-    pub fn fractal_base(&self) -> &Model {
+    pub fn fractal_base(&self) -> &Model3D {
         &self.fractal_base
     }
 
@@ -43,7 +44,7 @@ impl Scene {
         self.transformations = transformations;
     }
 
-    pub fn set_fractal_base(&mut self, model: Model) {
+    pub fn set_fractal_base(&mut self, model: Model3D) {
         self.fractal_base = model;
     }
 
@@ -62,7 +63,7 @@ impl Scene {
             return 0.0;
         }
 
-        let model_height = Self::model_max_local_y(&self.fractal_base);
+        let model_height = Self::model_max_local_y(&self.fractal_base.model);
         let up_vector = Vec4::new(0.0, model_height, 0.0, 1.0);
 
         self.transformations

@@ -9,6 +9,7 @@ use glium::{
 };
 
 use crate::camera::ViewParameters;
+use crate::model_loader::Model3D;
 use glm::{Mat4, Vec3};
 use tobj::Model;
 use winit::event_loop::ActiveEventLoop;
@@ -139,7 +140,7 @@ impl Renderer {
     pub fn draw_model_instanced(
         &mut self,
         frame: &mut Frame,
-        model: &Model,
+        model: &Model3D,
         instance_data: &[InstanceData],
         view_parameters: &ViewParameters,
         light_pos: [f32; 3],
@@ -148,7 +149,7 @@ impl Renderer {
         interpolation_color_low: [f32; 3],
         interpolation_color_high: [f32; 3],
     ) {
-        let (vertices, indices) = Self::model_to_vertices_and_indices(model);
+        let (vertices, indices) = Self::model_to_vertices_and_indices(&model.model);
 
         let vertex_buffer = &glium::VertexBuffer::new(&self.display, &vertices).unwrap();
         let instance_buffer = glium::VertexBuffer::new(&self.display, instance_data).unwrap();
