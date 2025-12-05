@@ -119,7 +119,7 @@ impl Renderer {
             view_parameters,
             *scene.light_position(),
             shading_mode,
-            1.0
+            1.0,
         );
 
         if *interaction_mode == AppInteractionMode::GuiInteraction {
@@ -129,6 +129,7 @@ impl Renderer {
         frame.finish().expect("Failed to destroy frame");
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn draw_model_instanced(
         &mut self,
         frame: &mut Frame,
@@ -159,9 +160,9 @@ impl Renderer {
             ..DrawParameters::default()
         };
 
+        // TODO configure colors in the GUI
         let interpolation_color_low = [0.28f32, 0.14f32, 0.01f32];
         let interpolation_color_high = [0.08f32, 0.2f32, 0.01f32];
-
 
         let uniforms = &uniform! {
             view: view_parameters.view_matrix,
