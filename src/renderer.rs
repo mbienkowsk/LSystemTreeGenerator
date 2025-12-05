@@ -87,6 +87,10 @@ impl Renderer {
         frame.clear_color_and_depth((0.1, 0.1, 0.1, 1.0), 1.0);
 
         let shading_mode = i32::from(*self.gui.get_shading_mode());
+        let (interpolation_color_low, interpolation_color_high) =
+            self.gui.get_interpolation_colors();
+
+        let fractal_total_height = scene.fractal_total_height();
 
         if !scene.transformations().is_empty() {
             let instance_data: Vec<InstanceData> = scene
@@ -102,6 +106,9 @@ impl Renderer {
                 view_parameters,
                 *scene.light_position(),
                 shading_mode,
+                fractal_total_height,
+                interpolation_color_low,
+                interpolation_color_high,
             );
         }
 
@@ -116,6 +123,9 @@ impl Renderer {
             view_parameters,
             *scene.light_position(),
             shading_mode,
+            1.0,
+            interpolation_color_low,
+            interpolation_color_high,
         );
 
         if *interaction_mode == AppInteractionMode::GuiInteraction {
@@ -125,6 +135,7 @@ impl Renderer {
         frame.finish().expect("Failed to destroy frame");
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn draw_model_instanced(
         &mut self,
         frame: &mut Frame,
@@ -133,6 +144,9 @@ impl Renderer {
         view_parameters: &ViewParameters,
         light_pos: [f32; 3],
         shading_mode: i32,
+        total_fractal_height: f32,
+        interpolation_color_low: [f32; 3],
+        interpolation_color_high: [f32; 3],
     ) {
         let (vertices, indices) = Self::model_to_vertices_and_indices(model);
 
@@ -159,7 +173,10 @@ impl Renderer {
             projection: view_parameters.projection_matrix,
             u_light_pos: light_pos,
             u_view_pos: view_parameters.camera_position,
-            u_shading_mode: shading_mode
+            u_shading_mode: shading_mode,
+            u_interpolation_color_low: interpolation_color_low,
+            u_interpolation_color_high: interpolation_color_high,
+            u_total_height: total_fractal_height,
         };
 
         frame

@@ -1,4 +1,4 @@
-use glm::Mat4;
+use glm::{Mat4, Vec4};
 use tobj::Model;
 
 pub struct Scene {
@@ -45,5 +45,29 @@ impl Scene {
 
     pub fn set_fractal_base(&mut self, model: Model) {
         self.fractal_base = model;
+    }
+
+    /// Returns the maximum Y coordinate of the model's vertices
+    fn model_max_local_y(model: &Model) -> f32 {
+        model
+            .mesh
+            .positions
+            .chunks(3)
+            .map(|v| v[1])
+            .fold(f32::NEG_INFINITY, f32::max)
+    }
+
+    pub fn fractal_total_height(&self) -> f32 {
+        if self.transformations.is_empty() {
+            return 0.0;
+        }
+
+        let model_height = Self::model_max_local_y(&self.fractal_base);
+        let up_vector = Vec4::new(0.0, model_height, 0.0, 1.0);
+
+        self.transformations
+            .iter()
+            .map(|mat| (mat * up_vector)[1])
+            .fold(f32::NEG_INFINITY, f32::max)
     }
 }
