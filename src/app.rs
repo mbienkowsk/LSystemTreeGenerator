@@ -1,6 +1,10 @@
+use crate::gui::TreeGenerationConfig;
+use itertools::Itertools;
+use rand::Rng;
 use std::collections::{HashMap, HashSet};
 
 use glium::backend::glutin::SimpleWindowBuilder;
+use rand::distr::Uniform;
 use tobj::Model;
 use winit::{
     application::ApplicationHandler,
@@ -37,6 +41,7 @@ pub struct App {
     pressed_keys: HashSet<KeyCode>,
     interaction_mode: AppInteractionMode,
     lsystem_config: Option<LSystemConfig>,
+    tree_generation_config: Option<TreeGenerationConfig>,
     base_models: Vec<Model>,
     scene: Option<Scene>,
 }
@@ -66,6 +71,7 @@ impl ApplicationHandler for App {
             .handle_interaction_mode_change(&self.interaction_mode);
 
         self.lsystem_config = Some(self.get_current_lsystem_config().clone());
+        self.tree_generation_config = Some(self.get_current_tree_generation_config().clone());
         self.calculate_transformations();
     }
 
@@ -94,10 +100,16 @@ impl ApplicationHandler for App {
                     return;
                 }
 
-                let new_lsystem_config = self.get_current_lsystem_config();
-                if new_lsystem_config != self.lsystem_config.as_ref().unwrap() {
+                // TODO: add check here, wrap lsystemconfig and treegenconfig
+                if self.requires_transformation_recalculation() {
+                    let new_lsystem_config = self.get_current_lsystem_config();
                     log::info!("L-System config changed to {new_lsystem_config:?}");
                     self.lsystem_config = Some(new_lsystem_config.clone());
+                    let new_tree_generation_config = self.get_current_tree_generation_config();
+
+                    log::info!("Tree generation config changed to {new_tree_generation_config:?}");
+                    self.tree_generation_config = Some(new_tree_generation_config.clone());
+
                     self.calculate_transformations();
                 }
 
@@ -217,6 +229,31 @@ impl App {
         );
     }
 
+    #[allow(clippy::cast_precision_loss)]
+    fn generate_displacement_vectors(&self) -> Vec<glm::Vec3> {
+        let num_trees = self.get_current_tree_generation_config().get_num_trees();
+        let mut rng = rand::rng();
+
+        let tree_generation_config = self.get_current_tree_generation_config();
+
+        let (xrange, zrange) = [
+            tree_generation_config.get_x_bounds(),
+            tree_generation_config.get_z_bounds(),
+        ]
+        .iter()
+        .map(|(min, max)| Uniform::new(*min, *max).expect("Failed to create uniform distribution"))
+        .collect_tuple()
+        .expect("Failed to create tuple of uniform distributions");
+
+        (0..num_trees)
+            .map(|_| {
+                let x = rng.sample(xrange) as f32;
+                let z = rng.sample(zrange) as f32;
+                glm::vec3(x, 0.0, z)
+            })
+            .collect::<Vec<glm::Vec3>>()
+    }
+
     fn calculate_transformations(&mut self) {
         let lsystem_config = self.get_current_lsystem_config();
 
@@ -225,10 +262,26 @@ impl App {
         let lsystem = LSystem::new(&lsystem_config.axiom, production_rules);
         let generated_string = lsystem.generate(lsystem_config.n_iterations);
         let transformations = TurtleInterpreter::interpret(&generated_string, lsystem_config.angle);
+
+        let displacement_matrices = self
+            .generate_displacement_vectors()
+            .iter()
+            .map(glm::translation)
+            .collect::<Vec<glm::Mat4>>();
+
+        let final_transformations = displacement_matrices
+            .iter()
+            .flat_map(|displacement_matrix| {
+                transformations
+                    .iter()
+                    .map(move |transformation| displacement_matrix * transformation)
+            })
+            .collect::<Vec<glm::Mat4>>();
+
         self.scene
             .as_mut()
             .unwrap()
-            .update_transformations(transformations);
+            .update_transformations(final_transformations);
     }
 
     fn get_current_lsystem_config(&self) -> &LSystemConfig {
@@ -237,5 +290,20 @@ impl App {
             .unwrap()
             .get_gui_controller()
             .get_lsystem_config()
+    }
+
+    fn get_current_tree_generation_config(&self) -> &TreeGenerationConfig {
+        self.renderer
+            .as_ref()
+            .unwrap()
+            .get_gui_controller()
+            .get_tree_generation_config()
+    }
+
+    fn requires_transformation_recalculation(&mut self) -> bool {
+        let new_lsystem_config = self.get_current_lsystem_config();
+        let new_tree_generation_config = self.get_current_tree_generation_config();
+        new_lsystem_config != self.lsystem_config.as_ref().unwrap()
+            || new_tree_generation_config != self.tree_generation_config.as_ref().unwrap()
     }
 }

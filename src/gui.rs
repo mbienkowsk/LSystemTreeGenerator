@@ -14,7 +14,7 @@ pub struct GuiController {
     shading_mode: ShadingMode,
     interpolation_color_low: [f32; 3],
     interpolation_color_high: [f32; 3],
-    tree_generation_bounds: TreeGenerationConfig,
+    tree_generation_config: TreeGenerationConfig,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -36,23 +36,37 @@ impl Default for LSystemConfig {
     }
 }
 
-#[derive(Debug, PartialEq)]
-struct TreeGenerationConfig {
+#[derive(Debug, Clone, PartialEq)]
+pub struct TreeGenerationConfig {
     num_trees: u8,
-    xmin: f32,
-    xmax: f32,
-    zmin: f32,
-    zmax: f32,
+    xmin: i32,
+    xmax: i32,
+    zmin: i32,
+    zmax: i32,
+}
+
+impl TreeGenerationConfig {
+    pub fn get_num_trees(&self) -> u8 {
+        self.num_trees
+    }
+
+    pub fn get_x_bounds(&self) -> (i32, i32) {
+        (self.xmin, self.xmax)
+    }
+
+    pub fn get_z_bounds(&self) -> (i32, i32) {
+        (self.zmin, self.zmax)
+    }
 }
 
 impl Default for TreeGenerationConfig {
     fn default() -> Self {
         Self {
             num_trees: 1,
-            xmin: -10.0,
-            xmax: 10.0,
-            zmin: -10.0,
-            zmax: 10.0,
+            xmin: -10,
+            xmax: 10,
+            zmin: -10,
+            zmax: 10,
         }
     }
 }
@@ -93,12 +107,16 @@ impl GuiController {
             lsystem_config: LSystemConfig::default(),
             interpolation_color_low: [0.28, 0.14, 0.01],
             interpolation_color_high: [0.08, 0.2, 0.01],
-            tree_generation_bounds: TreeGenerationConfig::default(),
+            tree_generation_config: TreeGenerationConfig::default(),
         }
     }
 
     pub fn get_lsystem_config(&self) -> &LSystemConfig {
         &self.lsystem_config
+    }
+
+    pub fn get_tree_generation_config(&self) -> &TreeGenerationConfig {
+        &self.tree_generation_config
     }
 
     pub fn get_model_selection(&self) -> &ModelSelection {
@@ -150,14 +168,14 @@ impl GuiController {
             ui.add(
                 egui::Slider::new(
                     &mut tree_generation_config.xmin,
-                    -50.0..=tree_generation_config.xmax,
+                    -50..=tree_generation_config.xmax,
                 )
                 .text("X Min"),
             );
             ui.add(
                 egui::Slider::new(
                     &mut tree_generation_config.xmax,
-                    -tree_generation_config.xmin..=50.0,
+                    -tree_generation_config.xmin..=50,
                 )
                 .text("X Max"),
             );
@@ -165,14 +183,14 @@ impl GuiController {
             ui.add(
                 egui::Slider::new(
                     &mut tree_generation_config.zmin,
-                    -50.0..=tree_generation_config.zmax,
+                    -50..=tree_generation_config.zmax,
                 )
                 .text("Z Min"),
             );
             ui.add(
                 egui::Slider::new(
                     &mut tree_generation_config.zmax,
-                    -tree_generation_config.zmin..=50.0,
+                    -tree_generation_config.zmin..=50,
                 )
                 .text("Z Max"),
             );
@@ -221,7 +239,7 @@ impl GuiController {
             GuiController::ui_control_panel(model_selection, shading_mode, ctx);
             GuiController::ui_lsystem_config(lsystem_config, ctx);
             GuiController::ui_color_panel(color_low, color_high, ctx);
-            GuiController::ui_tree_generation_config(&mut self.tree_generation_bounds, ctx);
+            GuiController::ui_tree_generation_config(&mut self.tree_generation_config, ctx);
         });
         self.egui_glium.paint(display, frame);
     }
