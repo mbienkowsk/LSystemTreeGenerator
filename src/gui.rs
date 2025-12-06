@@ -14,6 +14,7 @@ pub struct GuiController {
     shading_mode: ShadingMode,
     interpolation_color_low: [f32; 3],
     interpolation_color_high: [f32; 3],
+    tree_generation_bounds: TreeGenerationConfig,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -31,6 +32,27 @@ impl Default for LSystemConfig {
             production_rules: vec![('F', "F[+F]F[-F]F".to_string())],
             n_iterations: 3,
             angle: 25.0,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+struct TreeGenerationConfig {
+    num_trees: u8,
+    xmin: f32,
+    xmax: f32,
+    zmin: f32,
+    zmax: f32,
+}
+
+impl Default for TreeGenerationConfig {
+    fn default() -> Self {
+        Self {
+            num_trees: 1,
+            xmin: -10.0,
+            xmax: 10.0,
+            zmin: -10.0,
+            zmax: 10.0,
         }
     }
 }
@@ -71,6 +93,7 @@ impl GuiController {
             lsystem_config: LSystemConfig::default(),
             interpolation_color_low: [0.28, 0.14, 0.01],
             interpolation_color_high: [0.08, 0.2, 0.01],
+            tree_generation_bounds: TreeGenerationConfig::default(),
         }
     }
 
@@ -116,6 +139,46 @@ impl GuiController {
         });
     }
 
+    fn ui_tree_generation_config(tree_generation_config: &mut TreeGenerationConfig, ctx: &Context) {
+        egui::Window::new("Tree Generation").show(ctx, |ui| {
+            ui.label("Number of trees");
+            ui.add(egui::Slider::new(
+                &mut tree_generation_config.num_trees,
+                1..=128,
+            ));
+            ui.label("X Bounds:");
+            ui.add(
+                egui::Slider::new(
+                    &mut tree_generation_config.xmin,
+                    -50.0..=tree_generation_config.xmax,
+                )
+                .text("X Min"),
+            );
+            ui.add(
+                egui::Slider::new(
+                    &mut tree_generation_config.xmax,
+                    -tree_generation_config.xmin..=50.0,
+                )
+                .text("X Max"),
+            );
+            ui.label("Z Bounds:");
+            ui.add(
+                egui::Slider::new(
+                    &mut tree_generation_config.zmin,
+                    -50.0..=tree_generation_config.zmax,
+                )
+                .text("Z Min"),
+            );
+            ui.add(
+                egui::Slider::new(
+                    &mut tree_generation_config.zmax,
+                    -tree_generation_config.zmin..=50.0,
+                )
+                .text("Z Max"),
+            );
+        });
+    }
+
     // TODO make editable
     fn ui_lsystem_config(lsystem_config: &mut LSystemConfig, ctx: &Context) {
         egui::Window::new("LSystem Configuration").show(ctx, |ui| {
@@ -158,6 +221,7 @@ impl GuiController {
             GuiController::ui_control_panel(model_selection, shading_mode, ctx);
             GuiController::ui_lsystem_config(lsystem_config, ctx);
             GuiController::ui_color_panel(color_low, color_high, ctx);
+            GuiController::ui_tree_generation_config(&mut self.tree_generation_bounds, ctx);
         });
         self.egui_glium.paint(display, frame);
     }
