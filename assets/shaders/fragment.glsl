@@ -8,32 +8,35 @@ out vec4 color;
 uniform vec3 u_light_pos;
 uniform vec3 u_view_pos;
 uniform int u_shading_mode; // 0 = Flat, 1 = Gouraud, 2 = Phong
+uniform int u_color_mode; // 0 = Use material, 1 = Interpolate by height
+
 uniform vec3 u_interpolation_color_low;
 uniform vec3 u_interpolation_color_high;
 uniform float u_total_height;
 
+uniform vec3 u_material_ambient;
+uniform vec3 u_material_diffuse;
+uniform vec3 u_material_specular;
+
 const vec3 light_color = vec3(1.0, 1.0, 1.0);
 const vec3 dark_color = vec3(0.0, 0.0, 0.0);
 
-void main() {
-    // Interpolate the object color based on height
+vec3 interpolate_color() {
+    float fragment_height = v_position.y;
     float height_factor = clamp(v_position.y / u_total_height, 0.0, 1.0);
-    vec3 object_color = mix(u_interpolation_color_low, u_interpolation_color_high, height_factor);
-    
-    // flat
-    if (u_shading_mode == 0) {
-        color = vec4(object_color, 1.0);
-        return;
-    }
+    return mix(u_interpolation_color_low, u_interpolation_color_high, height_factor);
+}
 
-    // gourard
-    if (u_shading_mode == 1) {
-        float brightness = dot(normalize(v_normal), normalize(u_light_pos - v_position));
-        color = vec4(mix(dark_color, object_color, brightness), 1.0);
-        return;
-    }
+void flat_shading(vec3 object_color) {
+    color = vec4(object_color, 1.0);
+}
 
-    // phong
+void gouraud_shading(vec3 object_color) {
+    float brightness = dot(normalize(v_normal), normalize(u_light_pos - v_position));
+    color = vec4(mix(dark_color, object_color, brightness), 1.0);
+}
+
+void phong_shading(vec3 object_color) {
     // ambient
     float ambient_strength = 0.1;
     vec3 ambient = ambient_strength * light_color;
@@ -53,4 +56,16 @@ void main() {
 
     vec3 result = (ambient + diffuse + specular) * object_color;
     color = vec4(result, 1.0);
+}
+
+void main() {
+    vec3 object_color = interpolate_color();
+
+    if (u_shading_mode == 0) {
+        flat_shading(object_color);
+    } else if (u_shading_mode == 1) {
+        gouraud_shading(object_color);
+    } else {
+        phong_shading(object_color);
+    }
 }
