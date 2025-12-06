@@ -5,7 +5,7 @@ use tobj::Model;
 pub struct Scene {
     floor: Model3D,
     fractal_base: Model3D,
-    transformations: Vec<Mat4>,
+    transformations: Vec<Vec<Mat4>>,
     light_position: [f32; 3],
 }
 
@@ -13,7 +13,7 @@ impl Scene {
     pub fn new(
         floor: Model3D,
         fractal_base: Model3D,
-        transformations: Vec<Mat4>,
+        transformations: Vec<Vec<Mat4>>,
         light_position: [f32; 3],
     ) -> Self {
         Self {
@@ -32,7 +32,7 @@ impl Scene {
         &self.fractal_base
     }
 
-    pub fn transformations(&self) -> &[Mat4] {
+    pub fn transformations(&self) -> &Vec<Vec<Mat4>> {
         &self.transformations
     }
 
@@ -40,7 +40,7 @@ impl Scene {
         &self.light_position
     }
 
-    pub fn update_transformations(&mut self, transformations: Vec<Mat4>) {
+    pub fn update_transformations(&mut self, transformations: Vec<Vec<Mat4>>) {
         self.transformations = transformations;
     }
 
@@ -67,6 +67,8 @@ impl Scene {
         let up_vector = Vec4::new(0.0, model_height, 0.0, 1.0);
 
         self.transformations
+            .first()
+            .expect("Empty case was handled above")
             .iter()
             .map(|mat| (mat * up_vector)[1])
             .fold(f32::NEG_INFINITY, f32::max)

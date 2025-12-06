@@ -97,7 +97,11 @@ impl Renderer {
             let instance_data: Vec<InstanceData> = scene
                 .transformations()
                 .iter()
-                .map(|&matrix| InstanceData::from_matrix(matrix))
+                .flat_map(|transform_list| {
+                    transform_list
+                        .iter()
+                        .map(|matrix| InstanceData::from_matrix(*matrix))
+                })
                 .collect();
 
             self.draw_model_instanced(

@@ -262,12 +262,13 @@ impl App {
 
         let final_transformations = displacement_matrices
             .iter()
-            .flat_map(|displacement_matrix| {
+            .map(|displacement_matrix| {
                 transformations
                     .iter()
                     .map(move |transformation| displacement_matrix * transformation)
+                    .collect::<Vec<glm::Mat4>>()
             })
-            .collect::<Vec<glm::Mat4>>();
+            .collect::<Vec<Vec<glm::Mat4>>>();
 
         self.scene
             .as_mut()
