@@ -9,6 +9,7 @@ use glium::{
 };
 
 use crate::camera::ViewParameters;
+use crate::model_loader::Model3D;
 use glm::{Mat4, Vec3};
 use tobj::Model;
 use winit::event_loop::ActiveEventLoop;
@@ -109,6 +110,7 @@ impl Renderer {
                 fractal_total_height,
                 interpolation_color_low,
                 interpolation_color_high,
+                ColorMode::Interpolated,
             );
         }
 
@@ -126,6 +128,7 @@ impl Renderer {
             1.0,
             interpolation_color_low,
             interpolation_color_high,
+            ColorMode::Material,
         );
 
         if *interaction_mode == AppInteractionMode::GuiInteraction {
@@ -139,7 +142,7 @@ impl Renderer {
     pub fn draw_model_instanced(
         &mut self,
         frame: &mut Frame,
-        model: &Model,
+        model: &Model3D,
         instance_data: &[InstanceData],
         view_parameters: &ViewParameters,
         light_pos: [f32; 3],
@@ -147,8 +150,9 @@ impl Renderer {
         total_fractal_height: f32,
         interpolation_color_low: [f32; 3],
         interpolation_color_high: [f32; 3],
+        color_mode: ColorMode,
     ) {
-        let (vertices, indices) = Self::model_to_vertices_and_indices(model);
+        let (vertices, indices) = Self::model_to_vertices_and_indices(&model.geometry);
 
         let vertex_buffer = &glium::VertexBuffer::new(&self.display, &vertices).unwrap();
         let instance_buffer = glium::VertexBuffer::new(&self.display, instance_data).unwrap();
@@ -177,6 +181,10 @@ impl Renderer {
             u_interpolation_color_low: interpolation_color_low,
             u_interpolation_color_high: interpolation_color_high,
             u_total_height: total_fractal_height,
+            u_color_mode: i32::from(color_mode),
+            u_material_ambient: model.material.ambient.unwrap(),
+            u_material_diffuse: model.material.diffuse.unwrap(),
+            u_material_specular: model.material.specular.unwrap(),
         };
 
         frame
@@ -234,6 +242,20 @@ impl InstanceData {
     fn from_matrix(matrix: Mat4) -> Self {
         Self {
             model_matrix: matrix.into(),
+        }
+    }
+}
+
+pub enum ColorMode {
+    Material,
+    Interpolated,
+}
+
+impl From<ColorMode> for i32 {
+    fn from(mode: ColorMode) -> Self {
+        match mode {
+            ColorMode::Material => 0,
+            ColorMode::Interpolated => 1,
         }
     }
 }

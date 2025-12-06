@@ -1,7 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
 use glium::backend::glutin::SimpleWindowBuilder;
-use tobj::Model;
 use winit::{
     application::ApplicationHandler,
     event::{DeviceId, ElementState, KeyEvent, WindowEvent},
@@ -15,7 +14,7 @@ const DELTA_TIME: f32 = 0.1;
 
 use crate::gui::LSystemConfig;
 use crate::lsystem::LSystem;
-use crate::model_loader::{load_cylinder, load_floor, load_monkey};
+use crate::model_loader::{Model3D, load_cylinder, load_floor, load_monkey};
 use crate::scene::Scene;
 use crate::turtle::TurtleInterpreter;
 use crate::{
@@ -37,7 +36,7 @@ pub struct App {
     pressed_keys: HashSet<KeyCode>,
     interaction_mode: AppInteractionMode,
     lsystem_config: Option<LSystemConfig>,
-    base_models: Vec<Model>,
+    base_models: Vec<Model3D>,
     scene: Option<Scene>,
 }
 
@@ -204,7 +203,7 @@ impl App {
             crate::gui::ModelSelection::Cylinder => &self.base_models[0],
         };
 
-        if model.name != self.scene.as_ref().unwrap().fractal_base().name {
+        if model.geometry.name != self.scene.as_ref().unwrap().fractal_base().geometry.name {
             self.scene.as_mut().unwrap().set_fractal_base(model.clone());
         }
 
