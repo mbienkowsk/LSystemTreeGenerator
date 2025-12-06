@@ -229,29 +229,27 @@ impl App {
         );
     }
 
+    /// Generates N matrices with random transalations within the configured bounds
     #[allow(clippy::cast_precision_loss)]
-    fn generate_displacement_vectors(&self) -> Vec<glm::Vec3> {
+    fn generate_displacement_matrices(&self) -> Vec<glm::Mat4> {
         let num_trees = self.get_current_tree_generation_config().get_num_trees();
         let mut rng = rand::rng();
 
         let tree_generation_config = self.get_current_tree_generation_config();
 
-        let (xrange, zrange) = [
-            tree_generation_config.get_x_bounds(),
-            tree_generation_config.get_z_bounds(),
-        ]
-        .iter()
-        .map(|(min, max)| Uniform::new(*min, *max).expect("Failed to create uniform distribution"))
-        .collect_tuple()
-        .expect("Failed to create tuple of uniform distributions");
+        let (xmin, xmax) = tree_generation_config.get_x_bounds();
+        let (zmin, zmax) = tree_generation_config.get_z_bounds();
 
         (0..num_trees)
             .map(|_| {
-                let x = rng.sample(xrange) as f32;
-                let z = rng.sample(zrange) as f32;
-                glm::vec3(x, 0.0, z)
+                let x = rng.random_range(xmin..xmax) as f32;
+                let z = rng.random_range(zmin..zmax) as f32;
+                let y_rotation = rng.random_range(0.0..360.0_f32).to_radians();
+
+                glm::translation(&glm::vec3(x, 0.0, z))
+                    * glm::rotation(y_rotation, &glm::vec3(0.0, 1.0, 0.0))
             })
-            .collect::<Vec<glm::Vec3>>()
+            .collect::<Vec<glm::Mat4>>()
     }
 
     fn calculate_transformations(&mut self) {
@@ -263,11 +261,7 @@ impl App {
         let generated_string = lsystem.generate(lsystem_config.n_iterations);
         let transformations = TurtleInterpreter::interpret(&generated_string, lsystem_config.angle);
 
-        let displacement_matrices = self
-            .generate_displacement_vectors()
-            .iter()
-            .map(glm::translation)
-            .collect::<Vec<glm::Mat4>>();
+        let displacement_matrices = self.generate_displacement_matrices();
 
         let final_transformations = displacement_matrices
             .iter()
