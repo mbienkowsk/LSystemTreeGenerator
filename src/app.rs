@@ -1,7 +1,8 @@
+use crate::gui::TreeGenerationConfig;
+use rand::Rng;
 use std::collections::{HashMap, HashSet};
 
 use glium::backend::glutin::SimpleWindowBuilder;
-use tobj::Model;
 use winit::{
     application::ApplicationHandler,
     event::{DeviceId, ElementState, KeyEvent, WindowEvent},
@@ -15,7 +16,7 @@ const DELTA_TIME: f32 = 0.1;
 
 use crate::gui::LSystemConfig;
 use crate::lsystem::LSystem;
-use crate::model_loader::{load_cylinder, load_floor, load_monkey};
+use crate::model_loader::{Model3D, load_cylinder, load_floor, load_monkey};
 use crate::scene::Scene;
 use crate::turtle::TurtleInterpreter;
 use crate::{
@@ -37,7 +38,8 @@ pub struct App {
     pressed_keys: HashSet<KeyCode>,
     interaction_mode: AppInteractionMode,
     lsystem_config: Option<LSystemConfig>,
-    base_models: Vec<Model>,
+    tree_generation_config: Option<TreeGenerationConfig>,
+    base_models: Vec<Model3D>,
     scene: Option<Scene>,
 }
 
@@ -66,6 +68,7 @@ impl ApplicationHandler for App {
             .handle_interaction_mode_change(&self.interaction_mode);
 
         self.lsystem_config = Some(self.get_current_lsystem_config().clone());
+        self.tree_generation_config = Some(self.get_current_tree_generation_config().clone());
         self.calculate_transformations();
     }
 
@@ -94,10 +97,16 @@ impl ApplicationHandler for App {
                     return;
                 }
 
-                let new_lsystem_config = self.get_current_lsystem_config();
-                if new_lsystem_config != self.lsystem_config.as_ref().unwrap() {
+                // TODO: add check here, wrap lsystemconfig and treegenconfig
+                if self.requires_transformation_recalculation() {
+                    let new_lsystem_config = self.get_current_lsystem_config();
                     log::info!("L-System config changed to {new_lsystem_config:?}");
                     self.lsystem_config = Some(new_lsystem_config.clone());
+                    let new_tree_generation_config = self.get_current_tree_generation_config();
+
+                    log::info!("Tree generation config changed to {new_tree_generation_config:?}");
+                    self.tree_generation_config = Some(new_tree_generation_config.clone());
+
                     self.calculate_transformations();
                 }
 
@@ -204,7 +213,7 @@ impl App {
             crate::gui::ModelSelection::Cylinder => &self.base_models[0],
         };
 
-        if model.name != self.scene.as_ref().unwrap().fractal_base().name {
+        if model.geometry.name != self.scene.as_ref().unwrap().fractal_base().geometry.name {
             self.scene.as_mut().unwrap().set_fractal_base(model.clone());
         }
 
@@ -217,6 +226,29 @@ impl App {
         );
     }
 
+    /// Generates N matrices with random transalations within the configured bounds
+    #[allow(clippy::cast_precision_loss)]
+    fn generate_displacement_matrices(&self) -> Vec<glm::Mat4> {
+        let num_trees = self.get_current_tree_generation_config().get_num_trees();
+        let mut rng = rand::rng();
+
+        let tree_generation_config = self.get_current_tree_generation_config();
+
+        let (xmin, xmax) = tree_generation_config.get_x_bounds();
+        let (zmin, zmax) = tree_generation_config.get_z_bounds();
+
+        (0..num_trees)
+            .map(|_| {
+                let x = rng.random_range(xmin..xmax) as f32;
+                let z = rng.random_range(zmin..zmax) as f32;
+                let y_rotation = rng.random_range(0.0..360.0_f32).to_radians();
+
+                glm::translation(&glm::vec3(x, 0.0, z))
+                    * glm::rotation(y_rotation, &glm::vec3(0.0, 1.0, 0.0))
+            })
+            .collect::<Vec<glm::Mat4>>()
+    }
+
     fn calculate_transformations(&mut self) {
         let lsystem_config = self.get_current_lsystem_config();
 
@@ -225,10 +257,23 @@ impl App {
         let lsystem = LSystem::new(&lsystem_config.axiom, production_rules);
         let generated_string = lsystem.generate(lsystem_config.n_iterations);
         let transformations = TurtleInterpreter::interpret(&generated_string, lsystem_config.angle);
+
+        let displacement_matrices = self.generate_displacement_matrices();
+
+        let final_transformations = displacement_matrices
+            .iter()
+            .map(|displacement_matrix| {
+                transformations
+                    .iter()
+                    .map(move |transformation| displacement_matrix * transformation)
+                    .collect::<Vec<glm::Mat4>>()
+            })
+            .collect::<Vec<Vec<glm::Mat4>>>();
+
         self.scene
             .as_mut()
             .unwrap()
-            .update_transformations(transformations);
+            .update_transformations(final_transformations);
     }
 
     fn get_current_lsystem_config(&self) -> &LSystemConfig {
@@ -237,5 +282,20 @@ impl App {
             .unwrap()
             .get_gui_controller()
             .get_lsystem_config()
+    }
+
+    fn get_current_tree_generation_config(&self) -> &TreeGenerationConfig {
+        self.renderer
+            .as_ref()
+            .unwrap()
+            .get_gui_controller()
+            .get_tree_generation_config()
+    }
+
+    fn requires_transformation_recalculation(&mut self) -> bool {
+        let new_lsystem_config = self.get_current_lsystem_config();
+        let new_tree_generation_config = self.get_current_tree_generation_config();
+        new_lsystem_config != self.lsystem_config.as_ref().unwrap()
+            || new_tree_generation_config != self.tree_generation_config.as_ref().unwrap()
     }
 }
