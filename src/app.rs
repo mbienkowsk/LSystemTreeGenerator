@@ -56,6 +56,7 @@ impl ApplicationHandler for App {
             load_floor(),
             self.base_models[0].clone(),
             Vec::new(),
+            3.0,
             [10.0, 10.0, 10.0],
         ));
 
@@ -218,7 +219,7 @@ impl App {
 
     fn calculate_transformations(&mut self) {
         let lsystem_config = self.get_current_lsystem_config();
-
+        let target_height = lsystem_config.fractal_height;
         let production_rules: HashMap<char, String> =
             lsystem_config.production_rules.iter().cloned().collect();
         let lsystem = LSystem::new(&lsystem_config.axiom, production_rules);
@@ -227,7 +228,7 @@ impl App {
         self.scene
             .as_mut()
             .unwrap()
-            .update_transformations(transformations);
+            .update_transformations(transformations, target_height);
     }
 
     fn get_current_lsystem_config(&self) -> &LSystemConfig {
