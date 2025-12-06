@@ -63,7 +63,7 @@ impl Scene {
             return 0.0;
         }
 
-        let model_height = Self::model_max_local_y(&self.fractal_base.model);
+        let model_height = Self::model_max_local_y(&self.fractal_base.geometry);
         let up_vector = Vec4::new(0.0, model_height, 0.0, 1.0);
 
         self.transformations

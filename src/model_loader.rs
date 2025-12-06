@@ -2,7 +2,7 @@ use tobj::{Material, Model};
 
 #[derive(Clone, Debug)]
 pub struct Model3D {
-    pub model: Model,
+    pub geometry: Model,
     pub material: Material,
 }
 
@@ -28,7 +28,7 @@ fn load_obj_file(path: &str) -> Model3D {
     let model = models.first().expect("Expected model").clone();
     let material = materials.first().expect("Expected material").clone();
 
-    Model3D { model, material }
+    Model3D { geometry: model, material }
 }
 
 pub fn load_monkey() -> Model3D {
@@ -48,22 +48,22 @@ mod tests {
     use crate::model_loader::*;
 
     fn display_model_info(model: &Model3D) {
-        println!("Model name: {}", model.model.name);
+        println!("Model name: {}", model.geometry.name);
         println!(
             "Loaded model with {} positions",
-            model.model.mesh.positions.len()
+            model.geometry.mesh.positions.len()
         );
         println!(
             "Loaded model with {} indices",
-            model.model.mesh.indices.len()
+            model.geometry.mesh.indices.len()
         );
         println!(
             "Loaded model with {} normals",
-            model.model.mesh.normals.len()
+            model.geometry.mesh.normals.len()
         );
         println!(
             "Loaded model with {} texcoords",
-            model.model.mesh.texcoords.len()
+            model.geometry.mesh.texcoords.len()
         );
         println!("Loaded material name: {}", model.material.name);
         println!("Material ambient color: {:?}", model.material.ambient);
@@ -72,11 +72,11 @@ mod tests {
     }
 
     fn check_if_model_loaded_correctly(model: &Model3D) {
-        assert!(!model.model.mesh.positions.is_empty());
-        assert!(!model.model.mesh.normals.is_empty());
+        assert!(!model.geometry.mesh.positions.is_empty());
+        assert!(!model.geometry.mesh.normals.is_empty());
         assert_eq!(
-            model.model.mesh.positions.len(),
-            model.model.mesh.normals.len()
+            model.geometry.mesh.positions.len(),
+            model.geometry.mesh.normals.len()
         );
     }
 

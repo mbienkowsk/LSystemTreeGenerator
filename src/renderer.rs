@@ -152,7 +152,7 @@ impl Renderer {
         interpolation_color_high: [f32; 3],
         color_mode: ColorMode,
     ) {
-        let (vertices, indices) = Self::model_to_vertices_and_indices(&model.model);
+        let (vertices, indices) = Self::model_to_vertices_and_indices(&model.geometry);
 
         let vertex_buffer = &glium::VertexBuffer::new(&self.display, &vertices).unwrap();
         let instance_buffer = glium::VertexBuffer::new(&self.display, instance_data).unwrap();

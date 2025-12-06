@@ -203,7 +203,7 @@ impl App {
             crate::gui::ModelSelection::Cylinder => &self.base_models[0],
         };
 
-        if model.model.name != self.scene.as_ref().unwrap().fractal_base().model.name {
+        if model.geometry.name != self.scene.as_ref().unwrap().fractal_base().geometry.name {
             self.scene.as_mut().unwrap().set_fractal_base(model.clone());
         }
 
