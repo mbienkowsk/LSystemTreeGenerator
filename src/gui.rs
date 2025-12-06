@@ -14,6 +14,7 @@ pub struct GuiController {
     shading_mode: ShadingMode,
     interpolation_color_low: [f32; 3],
     interpolation_color_high: [f32; 3],
+    fractal_height: f32,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -71,6 +72,7 @@ impl GuiController {
             lsystem_config: LSystemConfig::default(),
             interpolation_color_low: [0.28, 0.14, 0.01],
             interpolation_color_high: [0.08, 0.2, 0.01],
+            fractal_height: 50.0,
         }
     }
 
@@ -88,6 +90,10 @@ impl GuiController {
 
     pub fn get_interpolation_colors(&self) -> ([f32; 3], [f32; 3]) {
         (self.interpolation_color_low, self.interpolation_color_high)
+    }
+
+    pub fn get_fractal_height(&self) -> f32 {
+        self.fractal_height
     }
 
     pub fn handle_event(&mut self, event: &WindowEvent, window: &Window) {
@@ -110,6 +116,13 @@ impl GuiController {
         ui.radio_value(shading_mode, ShadingMode::Flat, "Flat");
         ui.radio_value(shading_mode, ShadingMode::Gouraud, "Gouraud");
         ui.radio_value(shading_mode, ShadingMode::Phong, "Phong");
+    }
+
+    fn ui_fractal_height(fractal_height: &mut f32, ui: &mut Ui) {
+        ui.label("Fractal Height:");
+        ui.add(
+            egui::Slider::new(fractal_height, 1.0..=100.0).text("Fractal Height"),
+        );
     }
 
     // TODO make editable
@@ -146,10 +159,12 @@ impl GuiController {
         let lsystem_config = &mut self.lsystem_config;
         let color_low = &mut self.interpolation_color_low;
         let color_high = &mut self.interpolation_color_high;
+        let fractal_height = &mut self.fractal_height;
 
         self.egui_glium.run(window, |ctx| {
             egui::Window::new("Control panel").show(ctx, |ui| {
                 GuiController::ui_control_panel(model_selection, shading_mode, ui);
+                GuiController::ui_fractal_height(fractal_height, ui);
                 ui.separator();
                 GuiController::ui_lsystem_config(lsystem_config, ui);
                 ui.separator();
