@@ -25,10 +25,10 @@ fn load_obj_file(path: &str) -> Model3D {
         "Expected exactly one material in material file for {path}"
     );
 
-    let model = models.first().expect("Expected model").clone();
+    let geometry = models.first().expect("Expected model").clone();
     let material = materials.first().expect("Expected material").clone();
 
-    Model3D { geometry: model, material }
+    Model3D { geometry, material }
 }
 
 pub fn load_monkey() -> Model3D {

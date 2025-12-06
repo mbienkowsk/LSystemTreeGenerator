@@ -28,7 +28,7 @@ impl Default for LSystemConfig {
     fn default() -> Self {
         Self {
             axiom: "F".to_string(),
-            production_rules: vec![('F', "F[+F]F[-F]F".to_string())],
+            production_rules: vec![('F', "F[+F][&F][\\F]F[-F][^F][/F]F".to_string())],
             n_iterations: 3,
             angle: 25.0,
         }
