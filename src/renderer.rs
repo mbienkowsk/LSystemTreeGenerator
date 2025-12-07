@@ -226,6 +226,10 @@ impl Renderer {
         let size = self.window.inner_size();
         size.width as f32 / size.height as f32
     }
+
+    pub fn unset_requires_tree_regeneration(&mut self) {
+        self.gui.unset_requires_tree_regeneration();
+    }
 }
 
 #[derive(Copy, Clone)]

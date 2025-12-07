@@ -97,7 +97,6 @@ impl ApplicationHandler for App {
                     return;
                 }
 
-                // TODO: add check here, wrap lsystemconfig and treegenconfig
                 if self.requires_transformation_recalculation() {
                     let new_lsystem_config = self.get_current_lsystem_config();
                     log::info!("L-System config changed to {new_lsystem_config:?}");
@@ -274,6 +273,10 @@ impl App {
             .as_mut()
             .unwrap()
             .update_transformations(final_transformations);
+        self.renderer
+            .as_mut()
+            .unwrap()
+            .unset_requires_tree_regeneration();
     }
 
     fn get_current_lsystem_config(&self) -> &LSystemConfig {
@@ -292,10 +295,17 @@ impl App {
             .get_tree_generation_config()
     }
 
+    fn requires_tree_regeneration(&mut self) -> bool {
+        self.renderer
+            .as_ref()
+            .unwrap()
+            .get_gui_controller()
+            .get_requires_tree_regeneration()
+    }
+
     fn requires_transformation_recalculation(&mut self) -> bool {
         let new_lsystem_config = self.get_current_lsystem_config();
-        let new_tree_generation_config = self.get_current_tree_generation_config();
         new_lsystem_config != self.lsystem_config.as_ref().unwrap()
-            || new_tree_generation_config != self.tree_generation_config.as_ref().unwrap()
+            || self.requires_tree_regeneration()
     }
 }

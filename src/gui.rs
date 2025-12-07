@@ -15,6 +15,7 @@ pub struct GuiController {
     interpolation_color_low: [f32; 3],
     interpolation_color_high: [f32; 3],
     tree_generation_config: TreeGenerationConfig,
+    requires_tree_regeneration: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -108,7 +109,16 @@ impl GuiController {
             interpolation_color_low: [0.28, 0.14, 0.01],
             interpolation_color_high: [0.08, 0.2, 0.01],
             tree_generation_config: TreeGenerationConfig::default(),
+            requires_tree_regeneration: false,
         }
+    }
+
+    pub fn get_requires_tree_regeneration(&self) -> bool {
+        self.requires_tree_regeneration
+    }
+
+    pub fn unset_requires_tree_regeneration(&mut self) {
+        self.requires_tree_regeneration = false;
     }
 
     pub fn get_lsystem_config(&self) -> &LSystemConfig {
@@ -157,7 +167,11 @@ impl GuiController {
         });
     }
 
-    fn ui_tree_generation_config(tree_generation_config: &mut TreeGenerationConfig, ctx: &Context) {
+    fn ui_tree_generation_config(
+        tree_generation_config: &mut TreeGenerationConfig,
+        requires_redraw: &mut bool,
+        ctx: &Context,
+    ) {
         egui::Window::new("Tree Generation").show(ctx, |ui| {
             ui.label("Number of trees");
             ui.add(egui::Slider::new(
@@ -168,14 +182,14 @@ impl GuiController {
             ui.add(
                 egui::Slider::new(
                     &mut tree_generation_config.xmin,
-                    -50..=tree_generation_config.xmax-1,
+                    -50..=tree_generation_config.xmax - 1,
                 )
                 .text("X Min"),
             );
             ui.add(
                 egui::Slider::new(
                     &mut tree_generation_config.xmax,
-                    (tree_generation_config.xmin+1)..=50,
+                    (tree_generation_config.xmin + 1)..=50,
                 )
                 .text("X Max"),
             );
@@ -183,17 +197,20 @@ impl GuiController {
             ui.add(
                 egui::Slider::new(
                     &mut tree_generation_config.zmin,
-                    -50..=tree_generation_config.zmax-1,
+                    -50..=tree_generation_config.zmax - 1,
                 )
                 .text("Z Min"),
             );
             ui.add(
                 egui::Slider::new(
                     &mut tree_generation_config.zmax,
-                    (tree_generation_config.zmin+1)..=50,
+                    (tree_generation_config.zmin + 1)..=50,
                 )
                 .text("Z Max"),
             );
+            if ui.add(egui::Button::new("Regenerate trees")).clicked() {
+                *requires_redraw = true;
+            }
         });
     }
 
@@ -239,7 +256,11 @@ impl GuiController {
             GuiController::ui_control_panel(model_selection, shading_mode, ctx);
             GuiController::ui_lsystem_config(lsystem_config, ctx);
             GuiController::ui_color_panel(color_low, color_high, ctx);
-            GuiController::ui_tree_generation_config(&mut self.tree_generation_config, ctx);
+            GuiController::ui_tree_generation_config(
+                &mut self.tree_generation_config,
+                &mut self.requires_tree_regeneration,
+                ctx,
+            );
         });
         self.egui_glium.paint(display, frame);
     }
