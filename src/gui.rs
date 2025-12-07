@@ -1,4 +1,4 @@
-use egui::Context;
+use egui::Ui;
 use egui_glium::EguiGlium;
 use egui_glium::egui_winit::egui::ViewportId;
 use glium::glutin::surface::WindowSurface;
@@ -22,6 +22,7 @@ pub struct LSystemConfig {
     pub production_rules: Vec<(char, String)>,
     pub n_iterations: u32,
     pub angle: f32,
+    pub fractal_height: f32, // TODO move elsewhere, now leaving here for convenience with App update logic
 }
 
 impl Default for LSystemConfig {
@@ -31,6 +32,7 @@ impl Default for LSystemConfig {
             production_rules: vec![('F', "F[+F][&F][\\F]F[-F][^F][/F]F".to_string())],
             n_iterations: 3,
             angle: 25.0,
+            fractal_height: 3.0,
         }
     }
 }
@@ -97,54 +99,52 @@ impl GuiController {
     fn ui_control_panel(
         model_selection: &mut ModelSelection,
         shading_mode: &mut ShadingMode,
-        ctx: &Context,
+        ui: &mut Ui,
     ) {
-        egui::Window::new("Control panel").show(ctx, |ui| {
-            egui::ComboBox::from_label("Selected Model")
-                .selected_text(format!("{model_selection:?}"))
-                .show_ui(ui, |ui| {
-                    ui.selectable_value(model_selection, ModelSelection::Monkey, "Monkey");
-                    ui.selectable_value(model_selection, ModelSelection::Cylinder, "Cylinder");
-                });
+        egui::ComboBox::from_label("Selected Model")
+            .selected_text(format!("{model_selection:?}"))
+            .show_ui(ui, |ui| {
+                ui.selectable_value(model_selection, ModelSelection::Monkey, "Monkey");
+                ui.selectable_value(model_selection, ModelSelection::Cylinder, "Cylinder");
+            });
 
-            ui.separator();
-            ui.label("Shading Mode:");
-            ui.radio_value(shading_mode, ShadingMode::Flat, "Flat");
-            ui.radio_value(shading_mode, ShadingMode::Gouraud, "Gouraud");
-            ui.radio_value(shading_mode, ShadingMode::Phong, "Phong");
-            ui.separator();
-        });
+        ui.label("Shading Mode:");
+        ui.radio_value(shading_mode, ShadingMode::Flat, "Flat");
+        ui.radio_value(shading_mode, ShadingMode::Gouraud, "Gouraud");
+        ui.radio_value(shading_mode, ShadingMode::Phong, "Phong");
+    }
+
+    fn ui_fractal_height(fractal_height: &mut f32, ui: &mut Ui) {
+        ui.label("Fractal Height:");
+        ui.add(egui::Slider::new(fractal_height, 0.1..=5.0).text("Fractal Height"));
     }
 
     // TODO make editable
-    fn ui_lsystem_config(lsystem_config: &mut LSystemConfig, ctx: &Context) {
-        egui::Window::new("LSystem Configuration").show(ctx, |ui| {
-            ui.add(
-                egui::Slider::new(&mut lsystem_config.n_iterations, 0..=6)
-                    .text("Number of Iterations"),
-            );
-            ui.add(egui::Slider::new(&mut lsystem_config.angle, 0.0..=45.0).text("Angle"));
-            ui.label(format!("{:?}", lsystem_config.axiom));
-            ui.label("Production Rules:");
-            for (i, (symbol, replacement)) in lsystem_config.production_rules.iter().enumerate() {
-                ui.horizontal(|ui| {
-                    ui.label(format!("{i}: {symbol} -> {replacement}"));
-                });
-            }
-        });
+    fn ui_lsystem_config(lsystem_config: &mut LSystemConfig, ui: &mut Ui) {
+        ui.label("LSystem Config:");
+        ui.add(
+            egui::Slider::new(&mut lsystem_config.n_iterations, 0..=6).text("Number of Iterations"),
+        );
+        ui.add(egui::Slider::new(&mut lsystem_config.angle, 0.0..=45.0).text("Angle"));
+        ui.label(format!("{:?}", lsystem_config.axiom));
+        ui.label("Production Rules:");
+        for (i, (symbol, replacement)) in lsystem_config.production_rules.iter().enumerate() {
+            ui.horizontal(|ui| {
+                ui.label(format!("{i}: {symbol} -> {replacement}"));
+            });
+        }
     }
 
     fn ui_color_panel(
         interpolation_color_low: &mut [f32; 3],
         interpolation_color_high: &mut [f32; 3],
-        ctx: &Context,
+        ui: &mut Ui,
     ) {
-        egui::Window::new("Color Configuration").show(ctx, |ui| {
-            ui.label("Color - low");
-            ui.color_edit_button_rgb(interpolation_color_low);
-            ui.label("Color - high");
-            ui.color_edit_button_rgb(interpolation_color_high);
-        });
+        ui.label("Color Interpolation:");
+        ui.label("Color - low");
+        ui.color_edit_button_rgb(interpolation_color_low);
+        ui.label("Color - high");
+        ui.color_edit_button_rgb(interpolation_color_high);
     }
 
     pub fn draw(&mut self, window: &Window, display: &Display<WindowSurface>, frame: &mut Frame) {
@@ -155,9 +155,14 @@ impl GuiController {
         let color_high = &mut self.interpolation_color_high;
 
         self.egui_glium.run(window, |ctx| {
-            GuiController::ui_control_panel(model_selection, shading_mode, ctx);
-            GuiController::ui_lsystem_config(lsystem_config, ctx);
-            GuiController::ui_color_panel(color_low, color_high, ctx);
+            egui::Window::new("Control panel").show(ctx, |ui| {
+                GuiController::ui_control_panel(model_selection, shading_mode, ui);
+                GuiController::ui_fractal_height(&mut lsystem_config.fractal_height, ui);
+                ui.separator();
+                GuiController::ui_lsystem_config(lsystem_config, ui);
+                ui.separator();
+                GuiController::ui_color_panel(color_low, color_high, ui);
+            });
         });
         self.egui_glium.paint(display, frame);
     }
