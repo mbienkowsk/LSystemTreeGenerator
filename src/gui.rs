@@ -168,14 +168,14 @@ impl GuiController {
             ui.add(
                 egui::Slider::new(
                     &mut tree_generation_config.xmin,
-                    -50..=tree_generation_config.xmax,
+                    -50..=tree_generation_config.xmax-1,
                 )
                 .text("X Min"),
             );
             ui.add(
                 egui::Slider::new(
                     &mut tree_generation_config.xmax,
-                    -tree_generation_config.xmin..=50,
+                    (tree_generation_config.xmin+1)..=50,
                 )
                 .text("X Max"),
             );
@@ -183,14 +183,14 @@ impl GuiController {
             ui.add(
                 egui::Slider::new(
                     &mut tree_generation_config.zmin,
-                    -50..=tree_generation_config.zmax,
+                    -50..=tree_generation_config.zmax-1,
                 )
                 .text("Z Min"),
             );
             ui.add(
                 egui::Slider::new(
                     &mut tree_generation_config.zmax,
-                    -tree_generation_config.zmin..=50,
+                    (tree_generation_config.zmin+1)..=50,
                 )
                 .text("Z Max"),
             );
