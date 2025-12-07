@@ -6,7 +6,6 @@ pub struct LSystem {
 }
 
 impl LSystem {
-    // TODO: restrict input to a predefined alphabet?
     pub fn new(axiom: &str, production_rules: HashMap<char, String>) -> Self {
         Self {
             axiom: axiom.to_string(),
