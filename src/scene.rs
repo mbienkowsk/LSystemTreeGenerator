@@ -95,16 +95,14 @@ impl Scene {
             return transformations;
         }
         let scale_factor = target_height / current_height;
+        let scale_matrix = glm::scale(
+            &Mat4::identity(),
+            &glm::vec3(scale_factor, scale_factor, scale_factor),
+        );
 
         transformations
             .into_iter()
-            .map(|mat| {
-                let scale_matrix = glm::scale(
-                    &Mat4::identity(),
-                    &glm::vec3(scale_factor, scale_factor, scale_factor),
-                );
-                scale_matrix * mat
-            })
+            .map(|mat| scale_matrix * mat)
             .collect()
     }
 }
