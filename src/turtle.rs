@@ -1,28 +1,49 @@
-// TODO rotations in 3D
-// Probably will have to use quaternions for that
-// Implement symbols &, ^, \, /
+use glm::Mat4;
 
 pub struct TurtleInterpreter {}
 
-const ALLOWED_SYMBOLS: &[char] = &['F', '+', '-', '[', ']'];
-
+#[derive(Clone, Debug)]
 struct TurtleState {
     position: glm::Vec3,
     direction: glm::Vec3,
 }
 
 impl TurtleInterpreter {
-    fn validate_input(input: &str) -> bool {
-        input.chars().all(|c| ALLOWED_SYMBOLS.contains(&c))
+    fn parse_input(input: &str) -> Vec<TurtleCommand> {
+        input
+            .chars()
+            .map(|c| TurtleCommand::try_from(c).unwrap())
+            .collect()
     }
 
-    pub fn interpret(lsystem: &str, angle: f32) -> Vec<glm::Mat4> {
-        assert!(
-            Self::validate_input(lsystem),
-            "Input contains invalid symbols"
-        );
+    fn get_rotation_matrix(axis: Axis, angles: f32) -> Mat4 {
+        let rotation_axis = match axis {
+            Axis::X => glm::vec3(1.0, 0.0, 0.0),
+            Axis::Y => glm::vec3(0.0, 1.0, 0.0),
+            Axis::Z => glm::vec3(0.0, 0.0, 1.0),
+        };
+        glm::rotation(angles.to_radians(), &rotation_axis)
+    }
 
-        let mut transformations: Vec<glm::Mat4> = Vec::new();
+    fn handle_rotation(rot_matrix: Mat4, current_state: &TurtleState) -> TurtleState {
+        let new_direction = (rot_matrix
+            * glm::vec4(
+                current_state.direction.x,
+                current_state.direction.y,
+                current_state.direction.z,
+                0.0,
+            ))
+        .xyz();
+        TurtleState {
+            position: current_state.position,
+            direction: glm::normalize(&new_direction),
+        }
+    }
+
+    pub fn interpret(lsystem: &str, angle: f32) -> Vec<Mat4> {
+        let commands = Self::parse_input(lsystem);
+
+        let mut transformations: Vec<Mat4> = Vec::new();
         let mut state_stack: Vec<TurtleState> = Vec::new();
 
         let mut current_state = TurtleState {
@@ -30,10 +51,9 @@ impl TurtleInterpreter {
             direction: glm::vec3(0.0, 1.0, 0.0), // pointing up (Y+)
         };
 
-        for symbol in lsystem.chars() {
-            match symbol {
-                'F' => {
-                    // Move forward and create transformation
+        for command in &commands {
+            match command {
+                TurtleCommand::MoveForward => {
                     let new_position = current_state.position + current_state.direction;
 
                     // Translation to midpoint
@@ -48,49 +68,91 @@ impl TurtleInterpreter {
                     transformations.push(translation * rotation);
                     current_state.position = new_position;
                 }
-                '+' => {
-                    // Rotate left around Z-axis
-                    let rotation = glm::rotation(angle.to_radians(), &glm::vec3(0.0, 0.0, 1.0));
-                    current_state.direction = (rotation
-                        * glm::vec4(
-                            current_state.direction.x,
-                            current_state.direction.y,
-                            current_state.direction.z,
-                            0.0,
-                        ))
-                    .xyz();
-                    current_state.direction = glm::normalize(&current_state.direction);
+                TurtleCommand::RotateLeft => {
+                    current_state = Self::handle_rotation(
+                        Self::get_rotation_matrix(Axis::Z, angle),
+                        &current_state,
+                    );
                 }
-                '-' => {
-                    // Rotate right around Z-axis
-                    let rotation = glm::rotation(-angle.to_radians(), &glm::vec3(0.0, 0.0, 1.0));
-                    current_state.direction = (rotation
-                        * glm::vec4(
-                            current_state.direction.x,
-                            current_state.direction.y,
-                            current_state.direction.z,
-                            0.0,
-                        ))
-                    .xyz();
-                    current_state.direction = glm::normalize(&current_state.direction);
+                TurtleCommand::RotateRight => {
+                    current_state = Self::handle_rotation(
+                        Self::get_rotation_matrix(Axis::Z, -angle),
+                        &current_state,
+                    );
                 }
-                '[' => {
-                    // Push current state
-                    state_stack.push(TurtleState {
-                        position: current_state.position,
-                        direction: current_state.direction,
-                    });
+                TurtleCommand::PitchUp => {
+                    current_state = Self::handle_rotation(
+                        Self::get_rotation_matrix(Axis::X, angle),
+                        &current_state,
+                    );
                 }
-                ']' => {
-                    // Pop previous state
+                TurtleCommand::PitchDown => {
+                    current_state = Self::handle_rotation(
+                        Self::get_rotation_matrix(Axis::X, -angle),
+                        &current_state,
+                    );
+                }
+                TurtleCommand::RollLeft => {
+                    current_state = Self::handle_rotation(
+                        Self::get_rotation_matrix(Axis::Y, angle),
+                        &current_state,
+                    );
+                }
+                TurtleCommand::RollRight => {
+                    current_state = Self::handle_rotation(
+                        Self::get_rotation_matrix(Axis::Y, -angle),
+                        &current_state,
+                    );
+                }
+                TurtleCommand::PushState => {
+                    state_stack.push(current_state.clone());
+                }
+                TurtleCommand::PopState => {
                     if let Some(state) = state_stack.pop() {
                         current_state = state;
                     }
                 }
-                _ => {}
             }
         }
 
         transformations
     }
+}
+
+enum TurtleCommand {
+    MoveForward,
+    RotateLeft,
+    RotateRight,
+    PitchUp,
+    PitchDown,
+    RollLeft,
+    RollRight,
+    PushState,
+    PopState,
+}
+
+impl TryFrom<char> for TurtleCommand {
+    type Error = String;
+
+    fn try_from(value: char) -> Result<Self, Self::Error> {
+        match value {
+            'F' => Ok(TurtleCommand::MoveForward),
+            '+' => Ok(TurtleCommand::RotateLeft),
+            '-' => Ok(TurtleCommand::RotateRight),
+            '&' => Ok(TurtleCommand::PitchDown),
+            '^' => Ok(TurtleCommand::PitchUp),
+            '\\' => Ok(TurtleCommand::RollLeft),
+            '/' => Ok(TurtleCommand::RollRight),
+            '[' => Ok(TurtleCommand::PushState),
+            ']' => Ok(TurtleCommand::PopState),
+            _ => Err(format!("Invalid turtle command {value}")),
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+enum Axis {
+    X,
+    Y,
+    Z,
 }

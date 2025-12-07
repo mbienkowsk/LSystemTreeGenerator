@@ -91,8 +91,6 @@ impl Renderer {
         let (interpolation_color_low, interpolation_color_high) =
             self.gui.get_interpolation_colors();
 
-        let fractal_total_height = scene.fractal_total_height();
-
         if !scene.transformations().is_empty() {
             let instance_data: Vec<InstanceData> = scene
                 .transformations()
@@ -111,7 +109,7 @@ impl Renderer {
                 view_parameters,
                 *scene.light_position(),
                 shading_mode,
-                fractal_total_height,
+                scene.target_height(),
                 interpolation_color_low,
                 interpolation_color_high,
                 ColorMode::Interpolated,
