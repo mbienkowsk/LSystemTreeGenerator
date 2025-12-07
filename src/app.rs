@@ -59,6 +59,7 @@ impl ApplicationHandler for App {
             load_floor(),
             self.base_models[0].clone(),
             Vec::new(),
+            Vec::new(),
             3.0,
             [10.0, 10.0, 10.0],
         ));
@@ -70,7 +71,7 @@ impl ApplicationHandler for App {
 
         self.lsystem_config = Some(self.get_current_lsystem_config().clone());
         self.tree_generation_config = Some(self.get_current_tree_generation_config().clone());
-        self.calculate_transformations();
+        self.calculate_transformations(true);
     }
 
     fn window_event(
@@ -107,7 +108,7 @@ impl ApplicationHandler for App {
                     log::info!("Tree generation config changed to {new_tree_generation_config:?}");
                     self.tree_generation_config = Some(new_tree_generation_config.clone());
 
-                    self.calculate_transformations();
+                    self.calculate_transformations(self.requires_tree_regeneration());
                 }
 
                 self.render_scene();
@@ -249,7 +250,7 @@ impl App {
             .collect::<Vec<glm::Mat4>>()
     }
 
-    fn calculate_transformations(&mut self) {
+    fn calculate_transformations(&mut self, rerandomize_positions: bool) {
         let lsystem_config = self.get_current_lsystem_config();
         let target_height = lsystem_config.fractal_height;
         let production_rules: HashMap<char, String> =
@@ -258,9 +259,16 @@ impl App {
         let generated_string = lsystem.generate(lsystem_config.n_iterations);
         let transformations = TurtleInterpreter::interpret(&generated_string, lsystem_config.angle);
 
-        let displacement_matrices = self.generate_displacement_matrices();
+        if rerandomize_positions {
+            self.scene.as_mut().unwrap().displacement_matrices =
+                self.generate_displacement_matrices();
+        }
 
-        let final_transformations = displacement_matrices
+        let final_transformations = self
+            .scene
+            .as_ref()
+            .unwrap()
+            .displacement_matrices
             .iter()
             .map(|displacement_matrix| {
                 transformations
@@ -296,7 +304,7 @@ impl App {
             .get_tree_generation_config()
     }
 
-    fn requires_tree_regeneration(&mut self) -> bool {
+    fn requires_tree_regeneration(&self) -> bool {
         self.renderer
             .as_ref()
             .unwrap()

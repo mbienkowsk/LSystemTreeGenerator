@@ -6,6 +6,7 @@ pub struct Scene {
     floor: Model3D,
     fractal_base: Model3D,
     transformations: Vec<Vec<Mat4>>,
+    pub displacement_matrices: Vec<Mat4>,
     target_height: f32,
     light_position: [f32; 3],
 }
@@ -15,6 +16,7 @@ impl Scene {
         floor: Model3D,
         fractal_base: Model3D,
         transformations: Vec<Vec<Mat4>>,
+        displacement_matrices: Vec<Mat4>,
         target_height: f32,
         light_position: [f32; 3],
     ) -> Self {
@@ -22,6 +24,7 @@ impl Scene {
             floor,
             fractal_base,
             transformations,
+            displacement_matrices,
             target_height,
             light_position,
         }
