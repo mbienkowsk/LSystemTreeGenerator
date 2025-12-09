@@ -36,38 +36,20 @@ pub fn load_floor() -> Model3D {
     load_obj_file("assets/models/floor.obj")
 }
 
-fn load_monkey() -> Model3D {
-    load_obj_file("assets/models/monkey.obj")
-}
-
-fn load_cylinder() -> Model3D {
-    load_obj_file("assets/models/cylinder.obj")
-}
-
-fn load_branch() -> Model3D {
-    load_obj_file("assets/models/branch.obj")
-}
-
-fn load_leaf() -> Model3D {
-    load_obj_file("assets/models/leaf.obj")
-}
-
-fn load_twig() -> Model3D {
-    load_obj_file("assets/models/twig.obj")
-}
-
 pub fn load_model(selected_model: ModelSelection) -> Model3D {
-    match selected_model {
-        ModelSelection::Cylinder => load_cylinder(),
-        ModelSelection::Branch => load_branch(),
-        ModelSelection::Leaf => load_leaf(),
-        ModelSelection::Twig => load_twig(),
-        ModelSelection::Monkey => load_monkey(),
-    }
+    let path = match selected_model {
+        ModelSelection::Cylinder => "assets/models/cylinder.obj",
+        ModelSelection::Branch => "assets/models/branch.obj",
+        ModelSelection::Leaf => "assets/models/leaf.obj",
+        ModelSelection::Twig => "assets/models/twig.obj",
+        ModelSelection::Monkey => "assets/models/monkey.obj",
+    };
+    load_obj_file(path)
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::common::ModelSelection::{Branch, Cylinder};
     use crate::model_loader::*;
 
     fn display_model_info(model: &Model3D) {
@@ -105,35 +87,35 @@ mod tests {
 
     #[test]
     fn monkey_loads_correctly() {
-        let monkey_model = load_monkey();
+        let monkey_model = load_model(ModelSelection::Monkey);
         display_model_info(&monkey_model);
         check_if_model_loaded_correctly(&monkey_model);
     }
 
     #[test]
     fn cylinder_loads_correctly() {
-        let model = load_cylinder();
+        let model = load_model(Cylinder);
         check_if_model_loaded_correctly(&model);
         display_model_info(&model);
     }
 
     #[test]
     fn branch_loads_correctly() {
-        let model = load_branch();
+        let model = load_model(Branch);
         check_if_model_loaded_correctly(&model);
         display_model_info(&model);
     }
 
     #[test]
     fn leaf_loads_correctly() {
-        let model = load_leaf();
+        let model = load_model(ModelSelection::Leaf);
         check_if_model_loaded_correctly(&model);
         display_model_info(&model);
     }
 
     #[test]
     fn twig_loads_correctly() {
-        let model = load_twig();
+        let model = load_model(ModelSelection::Twig);
         check_if_model_loaded_correctly(&model);
         display_model_info(&model);
     }
