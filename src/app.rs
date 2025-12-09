@@ -206,7 +206,7 @@ impl App {
         };
 
         let gui = renderer.get_gui_controller();
-        let config = gui.get_lsystem_config();
+        let config = gui.get_l_system_config();
         let model_selection = gui.get_model_selection();
 
         let config_changed = self.l_system_config.as_ref() != Some(config);
@@ -270,6 +270,6 @@ impl App {
             .as_ref()
             .unwrap()
             .get_gui_controller()
-            .get_lsystem_config()
+            .get_l_system_config()
     }
 }
