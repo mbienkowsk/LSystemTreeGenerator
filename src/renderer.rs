@@ -1,5 +1,7 @@
 use crate::app::AppInteractionMode;
+use crate::camera::ViewParameters;
 use crate::gui::GuiController;
+use crate::model_loader::Model3D;
 use crate::scene::Scene;
 use crate::shaders::make_shader_program;
 
@@ -7,9 +9,6 @@ use glium::glutin::surface::WindowSurface;
 use glium::{
     Depth, DepthTest, Display, DrawParameters, Frame, Program, Surface, implement_vertex, uniform,
 };
-
-use crate::camera::ViewParameters;
-use crate::model_loader::Model3D;
 use glm::{Mat4, Vec3};
 use tobj::Model;
 use winit::event_loop::ActiveEventLoop;
@@ -137,7 +136,7 @@ impl Renderer {
     }
 
     #[allow(clippy::too_many_arguments)]
-    pub fn draw_model_instanced(
+    fn draw_model_instanced(
         &mut self,
         frame: &mut Frame,
         model: &Model3D,
@@ -223,17 +222,16 @@ impl Renderer {
 }
 
 #[derive(Copy, Clone)]
-pub struct Vertex {
+struct Vertex {
     position: [f32; 3],
     normal: [f32; 3],
 }
 implement_vertex!(Vertex, position, normal);
 
 #[derive(Copy, Clone)]
-pub struct InstanceData {
+struct InstanceData {
     model_matrix: [[f32; 4]; 4],
 }
-
 implement_vertex!(InstanceData, model_matrix);
 
 impl InstanceData {
@@ -244,7 +242,7 @@ impl InstanceData {
     }
 }
 
-pub enum ColorMode {
+enum ColorMode {
     Material,
     Interpolated,
 }
