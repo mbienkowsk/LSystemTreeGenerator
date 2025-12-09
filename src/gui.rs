@@ -1,3 +1,4 @@
+use crate::common::ModelSelection;
 use egui::Ui;
 use egui_glium::EguiGlium;
 use egui_glium::egui_winit::egui::ViewportId;
@@ -86,12 +87,6 @@ impl PresetSelection {
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub enum ModelSelection {
-    Cylinder,
-    Monkey,
-}
-
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum ShadingMode {
     Flat,
@@ -151,11 +146,14 @@ impl GuiController {
         shading_mode: &mut ShadingMode,
         ui: &mut Ui,
     ) {
-        egui::ComboBox::from_label("Selected Model")
+        egui::ComboBox::from_label("Base Model")
             .selected_text(format!("{model_selection:?}"))
             .show_ui(ui, |ui| {
-                ui.selectable_value(model_selection, ModelSelection::Monkey, "Monkey");
                 ui.selectable_value(model_selection, ModelSelection::Cylinder, "Cylinder");
+                ui.selectable_value(model_selection, ModelSelection::Branch, "Branch");
+                ui.selectable_value(model_selection, ModelSelection::Twig, "Twig");
+                ui.selectable_value(model_selection, ModelSelection::Leaf, "Leaf");
+                ui.selectable_value(model_selection, ModelSelection::Monkey, "Monkey");
             });
 
         ui.label("Shading Mode:");

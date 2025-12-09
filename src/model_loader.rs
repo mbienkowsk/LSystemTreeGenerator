@@ -1,3 +1,4 @@
+use crate::common::ModelSelection;
 use tobj::{Material, Model};
 
 #[derive(Clone, Debug)]
@@ -22,7 +23,7 @@ fn load_obj_file(path: &str) -> Model3D {
     assert_eq!(
         materials.len(),
         1,
-        "Expected exactly one material in material file for {path}"
+        "Expected exactly one material in {path}"
     );
 
     let geometry = models.first().expect("Expected model").clone();
@@ -31,16 +32,38 @@ fn load_obj_file(path: &str) -> Model3D {
     Model3D { geometry, material }
 }
 
-pub fn load_monkey() -> Model3D {
-    load_obj_file("assets/models/monkey.obj")
-}
-
 pub fn load_floor() -> Model3D {
     load_obj_file("assets/models/floor.obj")
 }
 
-pub fn load_cylinder() -> Model3D {
+fn load_monkey() -> Model3D {
+    load_obj_file("assets/models/monkey.obj")
+}
+
+fn load_cylinder() -> Model3D {
     load_obj_file("assets/models/cylinder.obj")
+}
+
+fn load_branch() -> Model3D {
+    load_obj_file("assets/models/branch.obj")
+}
+
+fn load_leaf() -> Model3D {
+    load_obj_file("assets/models/leaf.obj")
+}
+
+fn load_twig() -> Model3D {
+    load_obj_file("assets/models/twig.obj")
+}
+
+pub fn load_model(selected_model: ModelSelection) -> Model3D {
+    match selected_model {
+        ModelSelection::Cylinder => load_cylinder(),
+        ModelSelection::Branch => load_branch(),
+        ModelSelection::Leaf => load_leaf(),
+        ModelSelection::Twig => load_twig(),
+        ModelSelection::Monkey => load_monkey(),
+    }
 }
 
 #[cfg(test)]
@@ -88,16 +111,30 @@ mod tests {
     }
 
     #[test]
-    fn floor_loads_correctly() {
-        let floor_model = load_floor();
-        display_model_info(&floor_model);
-        check_if_model_loaded_correctly(&floor_model);
+    fn cylinder_loads_correctly() {
+        let model = load_cylinder();
+        check_if_model_loaded_correctly(&model);
+        display_model_info(&model);
     }
 
     #[test]
-    fn cylinder_loads_correctly() {
-        let cylinder_model = load_cylinder();
-        display_model_info(&cylinder_model);
-        check_if_model_loaded_correctly(&cylinder_model);
+    fn branch_loads_correctly() {
+        let model = load_branch();
+        check_if_model_loaded_correctly(&model);
+        display_model_info(&model);
+    }
+
+    #[test]
+    fn leaf_loads_correctly() {
+        let model = load_leaf();
+        check_if_model_loaded_correctly(&model);
+        display_model_info(&model);
+    }
+
+    #[test]
+    fn twig_loads_correctly() {
+        let model = load_twig();
+        check_if_model_loaded_correctly(&model);
+        display_model_info(&model);
     }
 }

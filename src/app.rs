@@ -9,12 +9,12 @@ use winit::{
     window::WindowId,
 };
 
-// TODO: this could probably be calculated based on time since last frame instead
 const DELTA_TIME: f32 = 0.1;
 
+use crate::common::ModelSelection;
 use crate::gui::LSystemConfig;
 use crate::lsystem::LSystem;
-use crate::model_loader::{Model3D, load_cylinder, load_floor, load_monkey};
+use crate::model_loader::{load_floor, load_model};
 use crate::scene::Scene;
 use crate::turtle::TurtleInterpreter;
 use crate::{
@@ -36,7 +36,7 @@ pub struct App {
     pressed_keys: HashSet<KeyCode>,
     interaction_mode: AppInteractionMode,
     lsystem_config: Option<LSystemConfig>,
-    base_models: Vec<Model3D>,
+    model_selection: Option<ModelSelection>,
     scene: Option<Scene>,
 }
 
@@ -51,10 +51,9 @@ impl ApplicationHandler for App {
             glm::vec3(0.0, 1.0, 5.0),
             self.renderer.as_ref().unwrap().get_aspect_ratio(),
         ));
-        self.base_models = vec![load_cylinder(), load_monkey()];
         self.scene = Some(Scene::new(
             load_floor(),
-            self.base_models[0].clone(),
+            load_model(ModelSelection::default()),
             Vec::new(),
             3.0,
             [10.0, 10.0, 10.0],
@@ -94,12 +93,7 @@ impl ApplicationHandler for App {
                     return;
                 }
 
-                let new_lsystem_config = self.get_current_lsystem_config();
-                if new_lsystem_config != self.lsystem_config.as_ref().unwrap() {
-                    log::info!("L-System config changed to {new_lsystem_config:?}");
-                    self.lsystem_config = Some(new_lsystem_config.clone());
-                    self.calculate_transformations();
-                }
+                self.update_fractal();
 
                 self.render_scene();
                 self.handle_movement();
@@ -197,17 +191,6 @@ impl App {
 
     fn render_scene(&mut self) {
         let renderer = self.renderer.as_mut().unwrap();
-
-        // TODO some reasonable base models for L-systems
-        let model = match renderer.get_gui_controller().get_model_selection() {
-            crate::gui::ModelSelection::Monkey => &self.base_models[1],
-            crate::gui::ModelSelection::Cylinder => &self.base_models[0],
-        };
-
-        if model.geometry.name != self.scene.as_ref().unwrap().fractal_base().geometry.name {
-            self.scene.as_mut().unwrap().set_fractal_base(model.clone());
-        }
-
         let camera = self.camera.as_ref().unwrap();
 
         renderer.render_scene(
@@ -215,6 +198,55 @@ impl App {
             &self.interaction_mode,
             &camera.view_parameters(),
         );
+    }
+
+    fn update_fractal(&mut self) {
+        let Some(renderer) = &self.renderer else {
+            return;
+        };
+
+        let gui = renderer.get_gui_controller();
+        let config = gui.get_lsystem_config();
+        let model_selection = gui.get_model_selection();
+
+        let config_changed = self.lsystem_config.as_ref() != Some(config);
+        let model_changed = self.model_selection.as_ref() != Some(model_selection);
+
+        if !config_changed && !model_changed {
+            return;
+        }
+
+        log::info!(
+            "Updating fractal - config_changed: {config_changed}, model_changed: {model_changed}"
+        );
+
+        if config_changed {
+            log::info!("L-System config changed to {config:?}");
+            self.lsystem_config = Some(config.clone());
+        }
+
+        if model_changed {
+            log::info!("Model selection changed to {model_selection:?}");
+            self.model_selection = Some(*model_selection);
+
+            let new_base = load_model(*model_selection);
+
+            if let Some(scene) = &mut self.scene {
+                scene.set_fractal_base(new_base);
+            }
+        }
+
+        let production_rules: HashMap<char, String> =
+            config.production_rules.iter().cloned().collect();
+        let lsystem = LSystem::new(&config.axiom, production_rules);
+        let generated = lsystem.generate(config.n_iterations);
+        let transformations = TurtleInterpreter::interpret(&generated, config.angle);
+
+        if let Some(scene) = &mut self.scene {
+            scene.update_transformations(transformations, config.fractal_height);
+        }
+
+        renderer.request_redraw();
     }
 
     fn calculate_transformations(&mut self) {
