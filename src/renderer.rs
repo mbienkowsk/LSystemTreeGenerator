@@ -54,6 +54,12 @@ impl Renderer {
         self.gui.handle_event(event, &self.window);
     }
 
+    #[allow(clippy::cast_precision_loss)]
+    pub fn get_aspect_ratio(&self) -> f32 {
+        let size = self.window.inner_size();
+        size.width as f32 / size.height as f32
+    }
+
     pub fn handle_interaction_mode_change(&mut self, mode: &AppInteractionMode) {
         match mode {
             AppInteractionMode::CameraControl => {
@@ -97,36 +103,39 @@ impl Renderer {
                 .map(|&matrix| InstanceData::from_matrix(matrix))
                 .collect();
 
-            self.draw_model_instanced(
-                &mut frame,
-                scene.fractal_base(),
-                &instance_data,
+            let fractal_cfg = InstancedDrawParams {
+                frame: &mut frame,
+                model: scene.fractal_base(),
+                instance_data: &instance_data,
                 view_parameters,
-                *scene.light_position(),
+                light_pos: *scene.light_position(),
                 shading_mode,
-                scene.target_height(),
+                total_fractal_height: scene.target_height(),
                 interpolation_color_low,
                 interpolation_color_high,
-                ColorMode::Interpolated,
-            );
+                color_mode: ColorMode::Interpolated,
+            };
+
+            self.draw_model_instanced(fractal_cfg);
         }
 
-        // There is overhead in using instanced rendering for a single instance
-        // But it is simpler this way
         let scale_matrix = glm::scale(&Mat4::identity(), &Vec3::new(10.0, 1.0, 10.0));
         let floor_instance = vec![InstanceData::from_matrix(scale_matrix)];
-        self.draw_model_instanced(
-            &mut frame,
-            scene.floor(),
-            &floor_instance,
+
+        let floor_cfg = InstancedDrawParams {
+            frame: &mut frame,
+            model: scene.floor(),
+            instance_data: &floor_instance,
             view_parameters,
-            *scene.light_position(),
+            light_pos: *scene.light_position(),
             shading_mode,
-            1.0,
+            total_fractal_height: 1.0,
             interpolation_color_low,
             interpolation_color_high,
-            ColorMode::Material,
-        );
+            color_mode: ColorMode::Material,
+        };
+
+        self.draw_model_instanced(floor_cfg);
 
         if *interaction_mode == AppInteractionMode::GuiInteraction {
             self.gui.draw(&self.window, &self.display, &mut frame);
@@ -135,24 +144,11 @@ impl Renderer {
         frame.finish().expect("Failed to destroy frame");
     }
 
-    #[allow(clippy::too_many_arguments)]
-    fn draw_model_instanced(
-        &mut self,
-        frame: &mut Frame,
-        model: &Model3D,
-        instance_data: &[InstanceData],
-        view_parameters: &ViewParameters,
-        light_pos: [f32; 3],
-        shading_mode: i32,
-        total_fractal_height: f32,
-        interpolation_color_low: [f32; 3],
-        interpolation_color_high: [f32; 3],
-        color_mode: ColorMode,
-    ) {
-        let (vertices, indices) = Self::model_to_vertices_and_indices(&model.geometry);
+    fn draw_model_instanced(&mut self, cfg: InstancedDrawParams<'_>) {
+        let (vertices, indices) = Self::model_to_vertices_and_indices(&cfg.model.geometry);
 
         let vertex_buffer = &glium::VertexBuffer::new(&self.display, &vertices).unwrap();
-        let instance_buffer = glium::VertexBuffer::new(&self.display, instance_data).unwrap();
+        let instance_buffer = glium::VertexBuffer::new(&self.display, cfg.instance_data).unwrap();
         let index_buffer = &glium::IndexBuffer::new(
             &self.display,
             glium::index::PrimitiveType::TrianglesList,
@@ -170,21 +166,21 @@ impl Renderer {
         };
 
         let uniforms = &uniform! {
-            view: view_parameters.view_matrix,
-            projection: view_parameters.projection_matrix,
-            u_light_pos: light_pos,
-            u_view_pos: view_parameters.camera_position,
-            u_shading_mode: shading_mode,
-            u_interpolation_color_low: interpolation_color_low,
-            u_interpolation_color_high: interpolation_color_high,
-            u_total_height: total_fractal_height,
-            u_color_mode: i32::from(color_mode),
-            u_material_ambient: model.material.ambient.unwrap(),
-            u_material_diffuse: model.material.diffuse.unwrap(),
-            u_material_specular: model.material.specular.unwrap(),
+            view: cfg.view_parameters.view_matrix,
+            projection: cfg.view_parameters.projection_matrix,
+            u_light_pos: cfg.light_pos,
+            u_view_pos: cfg.view_parameters.camera_position,
+            u_shading_mode: cfg.shading_mode,
+            u_interpolation_color_low: cfg.interpolation_color_low,
+            u_interpolation_color_high: cfg.interpolation_color_high,
+            u_total_height: cfg.total_fractal_height,
+            u_color_mode: i32::from(cfg.color_mode),
+            u_material_ambient: cfg.model.material.ambient.unwrap(),
+            u_material_diffuse: cfg.model.material.diffuse.unwrap(),
+            u_material_specular: cfg.model.material.specular.unwrap(),
         };
 
-        frame
+        cfg.frame
             .draw(
                 (vertex_buffer, instance_buffer.per_instance().unwrap()),
                 index_buffer,
@@ -212,12 +208,6 @@ impl Renderer {
             .collect();
 
         (vertices, mesh.indices.clone())
-    }
-
-    #[allow(clippy::cast_precision_loss)]
-    pub fn get_aspect_ratio(&self) -> f32 {
-        let size = self.window.inner_size();
-        size.width as f32 / size.height as f32
     }
 }
 
@@ -254,4 +244,18 @@ impl From<ColorMode> for i32 {
             ColorMode::Interpolated => 1,
         }
     }
+}
+
+// Groups all per-draw inputs to reduce parameter count.
+struct InstancedDrawParams<'a> {
+    frame: &'a mut Frame,
+    model: &'a Model3D,
+    instance_data: &'a [InstanceData],
+    view_parameters: &'a ViewParameters,
+    light_pos: [f32; 3],
+    shading_mode: i32,
+    total_fractal_height: f32,
+    interpolation_color_low: [f32; 3],
+    interpolation_color_high: [f32; 3],
+    color_mode: ColorMode,
 }
