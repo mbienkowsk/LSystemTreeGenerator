@@ -1,19 +1,28 @@
 use std::collections::HashMap;
 
-pub struct LSystem {
+pub fn generate_l_system(
+    axiom: &str,
+    production_rules: HashMap<char, String>,
+    n_iterations: u32,
+) -> String {
+    let l_system = LSystem::new(axiom, production_rules);
+    l_system.generate(n_iterations)
+}
+
+struct LSystem {
     axiom: String,
     production_rules: HashMap<char, String>,
 }
 
 impl LSystem {
-    pub fn new(axiom: &str, production_rules: HashMap<char, String>) -> Self {
+    fn new(axiom: &str, production_rules: HashMap<char, String>) -> Self {
         Self {
             axiom: axiom.to_string(),
             production_rules,
         }
     }
 
-    pub fn generate(&self, n_iterations: u32) -> String {
+    fn generate(&self, n_iterations: u32) -> String {
         let mut s = self.axiom.clone();
         for _ in 0..n_iterations {
             s = self.apply_rules(&s);
