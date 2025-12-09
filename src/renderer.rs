@@ -93,55 +93,81 @@ impl Renderer {
         frame.clear_color_and_depth((0.1, 0.1, 0.1, 1.0), 1.0);
 
         let shading_mode = i32::from(*self.gui.get_shading_mode());
-        let (interpolation_color_low, interpolation_color_high) =
-            self.gui.get_interpolation_colors();
+        let interpolation_colors = self.gui.get_interpolation_colors();
 
-        if !scene.transformations().is_empty() {
-            let instance_data: Vec<InstanceData> = scene
-                .transformations()
-                .iter()
-                .map(|&matrix| InstanceData::from_matrix(matrix))
-                .collect();
+        self.draw_fractals(
+            &mut frame,
+            scene,
+            view_parameters,
+            shading_mode,
+            interpolation_colors,
+        );
 
-            let fractal_cfg = InstancedDrawParams {
-                frame: &mut frame,
-                model: scene.fractal_base(),
-                instance_data: &instance_data,
-                view_parameters,
-                light_pos: *scene.light_position(),
-                shading_mode,
-                total_fractal_height: scene.target_height(),
-                interpolation_color_low,
-                interpolation_color_high,
-                color_mode: ColorMode::Interpolated,
-            };
+        self.draw_floor(&mut frame, scene, view_parameters, shading_mode);
 
-            self.draw_model_instanced(fractal_cfg);
+        if *interaction_mode == AppInteractionMode::GuiInteraction {
+            self.draw_gui(&mut frame);
         }
 
+        frame.finish().expect("Failed to destroy frame");
+    }
+
+    fn draw_gui(&mut self, frame: &mut Frame) {
+        self.gui.draw(&self.window, &self.display, frame);
+    }
+
+    fn draw_fractals(
+        &mut self,
+        frame: &mut Frame,
+        scene: &Scene,
+        view_parameters: &ViewParameters,
+        shading_mode: i32,
+        interpolation_colors: ([f32; 3], [f32; 3]),
+    ) {
+        let instance_data: Vec<InstanceData> = scene
+            .transformations()
+            .iter()
+            .map(|&matrix| InstanceData::from_matrix(matrix))
+            .collect();
+
+        let cfg = InstancedDrawParams {
+            frame,
+            model: scene.fractal_base(),
+            instance_data: &instance_data,
+            view_parameters,
+            light_pos: *scene.light_position(),
+            shading_mode,
+            total_fractal_height: scene.target_height(),
+            interpolation_colors,
+            color_mode: ColorMode::Interpolated,
+        };
+
+        self.draw_model_instanced(cfg);
+    }
+
+    fn draw_floor(
+        &mut self,
+        frame: &mut Frame,
+        scene: &Scene,
+        view_parameters: &ViewParameters,
+        shading_mode: i32,
+    ) {
         let scale_matrix = glm::scale(&Mat4::identity(), &Vec3::new(10.0, 1.0, 10.0));
         let floor_instance = vec![InstanceData::from_matrix(scale_matrix)];
 
-        let floor_cfg = InstancedDrawParams {
-            frame: &mut frame,
+        let cfg = InstancedDrawParams {
+            frame,
             model: scene.floor(),
             instance_data: &floor_instance,
             view_parameters,
             light_pos: *scene.light_position(),
             shading_mode,
             total_fractal_height: 1.0,
-            interpolation_color_low,
-            interpolation_color_high,
+            interpolation_colors: ([0.0, 0.0, 0.0], [0.0, 0.0, 0.0]),
             color_mode: ColorMode::Material,
         };
 
-        self.draw_model_instanced(floor_cfg);
-
-        if *interaction_mode == AppInteractionMode::GuiInteraction {
-            self.gui.draw(&self.window, &self.display, &mut frame);
-        }
-
-        frame.finish().expect("Failed to destroy frame");
+        self.draw_model_instanced(cfg);
     }
 
     fn draw_model_instanced(&mut self, cfg: InstancedDrawParams<'_>) {
@@ -171,8 +197,8 @@ impl Renderer {
             u_light_pos: cfg.light_pos,
             u_view_pos: cfg.view_parameters.camera_position,
             u_shading_mode: cfg.shading_mode,
-            u_interpolation_color_low: cfg.interpolation_color_low,
-            u_interpolation_color_high: cfg.interpolation_color_high,
+            u_interpolation_color_low: cfg.interpolation_colors.0,
+            u_interpolation_color_high: cfg.interpolation_colors.1,
             u_total_height: cfg.total_fractal_height,
             u_color_mode: i32::from(cfg.color_mode),
             u_material_ambient: cfg.model.material.ambient.unwrap(),
@@ -255,7 +281,6 @@ struct InstancedDrawParams<'a> {
     light_pos: [f32; 3],
     shading_mode: i32,
     total_fractal_height: f32,
-    interpolation_color_low: [f32; 3],
-    interpolation_color_high: [f32; 3],
+    interpolation_colors: ([f32; 3], [f32; 3]),
     color_mode: ColorMode,
 }
