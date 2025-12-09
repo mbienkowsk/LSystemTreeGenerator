@@ -1,3 +1,4 @@
+use crate::common::ModelSelection;
 use egui::Ui;
 use egui_glium::EguiGlium;
 use egui_glium::egui_winit::egui::ViewportId;
@@ -73,15 +74,6 @@ impl PresetSelection {
             },
         }
     }
-}
-
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub enum ModelSelection {
-    Cylinder,
-    Branch,
-    Leaf,
-    Twig,
-    Monkey,
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]

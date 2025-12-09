@@ -1,3 +1,4 @@
+use crate::common::ModelSelection;
 use tobj::{Material, Model};
 
 #[derive(Clone, Debug)]
@@ -31,28 +32,38 @@ fn load_obj_file(path: &str) -> Model3D {
     Model3D { geometry, material }
 }
 
-pub fn load_monkey() -> Model3D {
-    load_obj_file("assets/models/monkey.obj")
-}
-
 pub fn load_floor() -> Model3D {
     load_obj_file("assets/models/floor.obj")
 }
 
-pub fn load_cylinder() -> Model3D {
+fn load_monkey() -> Model3D {
+    load_obj_file("assets/models/monkey.obj")
+}
+
+fn load_cylinder() -> Model3D {
     load_obj_file("assets/models/cylinder.obj")
 }
 
-pub fn load_branch() -> Model3D {
+fn load_branch() -> Model3D {
     load_obj_file("assets/models/branch.obj")
 }
 
-pub fn load_leaf() -> Model3D {
+fn load_leaf() -> Model3D {
     load_obj_file("assets/models/leaf.obj")
 }
 
-pub fn load_twig() -> Model3D {
+fn load_twig() -> Model3D {
     load_obj_file("assets/models/twig.obj")
+}
+
+pub fn load_model(selected_model: ModelSelection) -> Model3D {
+    match selected_model {
+        ModelSelection::Cylinder => load_cylinder(),
+        ModelSelection::Branch => load_branch(),
+        ModelSelection::Leaf => load_leaf(),
+        ModelSelection::Twig => load_twig(),
+        ModelSelection::Monkey => load_monkey(),
+    }
 }
 
 #[cfg(test)]

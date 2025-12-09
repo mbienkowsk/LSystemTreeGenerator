@@ -4,6 +4,7 @@ extern crate nalgebra_glm as glm;
 
 mod app;
 mod camera;
+mod common;
 mod gui;
 mod lsystem;
 mod model_loader;

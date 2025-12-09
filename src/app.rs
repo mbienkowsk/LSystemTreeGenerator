@@ -11,11 +11,10 @@ use winit::{
 
 const DELTA_TIME: f32 = 0.1;
 
-use crate::gui::{LSystemConfig, ModelSelection};
+use crate::common::ModelSelection;
+use crate::gui::LSystemConfig;
 use crate::lsystem::LSystem;
-use crate::model_loader::{
-    load_branch, load_cylinder, load_floor, load_leaf, load_monkey, load_twig,
-};
+use crate::model_loader::{load_floor, load_model};
 use crate::scene::Scene;
 use crate::turtle::TurtleInterpreter;
 use crate::{
@@ -54,7 +53,7 @@ impl ApplicationHandler for App {
         ));
         self.scene = Some(Scene::new(
             load_floor(),
-            load_cylinder(),
+            load_model(ModelSelection::default()),
             Vec::new(),
             3.0,
             [10.0, 10.0, 10.0],
@@ -213,45 +212,41 @@ impl App {
         let config_changed = self.lsystem_config.as_ref() != Some(config);
         let model_changed = self.model_selection.as_ref() != Some(model_selection);
 
-        if config_changed || model_changed {
-            log::info!(
-                "Updating fractal - config_changed: {config_changed}, model_changed: {model_changed}"
-            );
+        if !config_changed && !model_changed {
+            return;
+        }
 
-            if config_changed {
-                log::info!("L-System config changed to {config:?}");
-                self.lsystem_config = Some(config.clone());
-            }
+        log::info!(
+            "Updating fractal - config_changed: {config_changed}, model_changed: {model_changed}"
+        );
 
-            if model_changed {
-                log::info!("Model selection changed to {model_selection:?}");
-                self.model_selection = Some(*model_selection);
+        if config_changed {
+            log::info!("L-System config changed to {config:?}");
+            self.lsystem_config = Some(config.clone());
+        }
 
-                let new_base = match model_selection {
-                    ModelSelection::Cylinder => load_cylinder(),
-                    ModelSelection::Branch => load_branch(),
-                    ModelSelection::Leaf => load_leaf(),
-                    ModelSelection::Twig => load_twig(),
-                    ModelSelection::Monkey => load_monkey(),
-                };
+        if model_changed {
+            log::info!("Model selection changed to {model_selection:?}");
+            self.model_selection = Some(*model_selection);
 
-                if let Some(scene) = &mut self.scene {
-                    scene.set_fractal_base(new_base);
-                }
-            }
-
-            let production_rules: HashMap<char, String> =
-                config.production_rules.iter().cloned().collect();
-            let lsystem = LSystem::new(&config.axiom, production_rules);
-            let generated = lsystem.generate(config.n_iterations);
-            let transformations = TurtleInterpreter::interpret(&generated, config.angle);
+            let new_base = load_model(*model_selection);
 
             if let Some(scene) = &mut self.scene {
-                scene.update_transformations(transformations, config.fractal_height);
+                scene.set_fractal_base(new_base);
             }
-
-            renderer.request_redraw();
         }
+
+        let production_rules: HashMap<char, String> =
+            config.production_rules.iter().cloned().collect();
+        let lsystem = LSystem::new(&config.axiom, production_rules);
+        let generated = lsystem.generate(config.n_iterations);
+        let transformations = TurtleInterpreter::interpret(&generated, config.angle);
+
+        if let Some(scene) = &mut self.scene {
+            scene.update_transformations(transformations, config.fractal_height);
+        }
+
+        renderer.request_redraw();
     }
 
     fn calculate_transformations(&mut self) {
