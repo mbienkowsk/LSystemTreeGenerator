@@ -16,7 +16,7 @@ use crate::gui::LSystemConfig;
 use crate::lsystem::LSystem;
 use crate::model_loader::{load_floor, load_model};
 use crate::scene::Scene;
-use crate::turtle::TurtleInterpreter;
+use crate::turtle::interpret_turtle_commands;
 use crate::{
     camera::{FlyCamera, MovementDirection},
     renderer::Renderer,
@@ -240,7 +240,7 @@ impl App {
             config.production_rules.iter().cloned().collect();
         let lsystem = LSystem::new(&config.axiom, production_rules);
         let generated = lsystem.generate(config.n_iterations);
-        let transformations = TurtleInterpreter::interpret(&generated, config.angle);
+        let transformations = interpret_turtle_commands(&generated, config.angle);
 
         if let Some(scene) = &mut self.scene {
             scene.update_transformations(transformations, config.fractal_height);
@@ -256,7 +256,7 @@ impl App {
             lsystem_config.production_rules.iter().cloned().collect();
         let lsystem = LSystem::new(&lsystem_config.axiom, production_rules);
         let generated_string = lsystem.generate(lsystem_config.n_iterations);
-        let transformations = TurtleInterpreter::interpret(&generated_string, lsystem_config.angle);
+        let transformations = interpret_turtle_commands(&generated_string, lsystem_config.angle);
         self.scene
             .as_mut()
             .unwrap()
