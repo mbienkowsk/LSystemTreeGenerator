@@ -12,7 +12,7 @@ impl TurtleInterpreter {
     fn parse_input(input: &str) -> Vec<TurtleCommand> {
         input
             .chars()
-            .map(|c| TurtleCommand::try_from(c).unwrap())
+            .filter_map(|c| TurtleCommand::try_from(c).ok())
             .collect()
     }
 
@@ -145,7 +145,7 @@ impl TryFrom<char> for TurtleCommand {
             '/' => Ok(TurtleCommand::RollRight),
             '[' => Ok(TurtleCommand::PushState),
             ']' => Ok(TurtleCommand::PopState),
-            _ => Err(format!("Invalid turtle command {value}")),
+            _ => Err(format!("Ignoring non-drawing symbol: {value}")),
         }
     }
 }
