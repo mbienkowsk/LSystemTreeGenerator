@@ -108,7 +108,9 @@ impl ApplicationHandler for App {
                     log::info!("Tree generation config changed to {new_tree_generation_config:?}");
                     self.tree_generation_config = Some(new_tree_generation_config.clone());
 
-                    self.calculate_transformations(self.requires_tree_regeneration());
+                    // NOTE: this doesn't work without reordering transformation multiplication
+                    // self.calculate_transformations(self.requires_tree_regeneration());
+                    self.calculate_transformations(true);
                 }
 
                 self.render_scene();
