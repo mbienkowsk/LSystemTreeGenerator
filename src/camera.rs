@@ -92,11 +92,10 @@ impl FlyCamera {
     }
 
     fn update_pitch(&mut self, yoffset: f32) {
-        self.pitch -= yoffset;
-
-        match self.pitch.clamp(MIN_PITCH, MAX_PITCH) {
-            MAX_PITCH => log::trace!("Pitch clamped to MAX_PITCH"),
-            MIN_PITCH => log::trace!("Pitch clamped to MIN_PITCH"),
+        self.pitch = (self.pitch - yoffset).clamp(MIN_PITCH, MAX_PITCH);
+        match self.pitch {
+            MAX_PITCH => log::info!("Pitch clamped to MAX_PITCH"),
+            MIN_PITCH => log::info!("Pitch clamped to MIN_PITCH"),
             _ => {}
         }
     }
