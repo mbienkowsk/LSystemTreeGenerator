@@ -75,9 +75,12 @@ impl PresetSelection {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum ModelSelection {
     Cylinder,
+    Branch,
+    Leaf,
+    Twig,
     Monkey,
 }
 
@@ -140,11 +143,14 @@ impl GuiController {
         shading_mode: &mut ShadingMode,
         ui: &mut Ui,
     ) {
-        egui::ComboBox::from_label("Selected Model")
+        egui::ComboBox::from_label("Base Model")
             .selected_text(format!("{model_selection:?}"))
             .show_ui(ui, |ui| {
-                ui.selectable_value(model_selection, ModelSelection::Monkey, "Monkey");
                 ui.selectable_value(model_selection, ModelSelection::Cylinder, "Cylinder");
+                ui.selectable_value(model_selection, ModelSelection::Branch, "Branch");
+                ui.selectable_value(model_selection, ModelSelection::Twig, "Twig");
+                ui.selectable_value(model_selection, ModelSelection::Leaf, "Leaf");
+                ui.selectable_value(model_selection, ModelSelection::Monkey, "Monkey");
             });
 
         ui.label("Shading Mode:");
