@@ -6,6 +6,10 @@ lint:
 build:
     cargo build --release
 
+# Run auto-formatter
+fmt:
+    cargo fmt
+
 # Run tests
 test:
     cargo test --all-features --verbose

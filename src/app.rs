@@ -13,10 +13,10 @@ const DELTA_TIME: f32 = 0.1;
 
 use crate::common::ModelSelection;
 use crate::gui::LSystemConfig;
-use crate::lsystem::LSystem;
+use crate::lsystem::generate_l_system;
 use crate::model_loader::{load_floor, load_model};
 use crate::scene::Scene;
-use crate::turtle::TurtleInterpreter;
+use crate::turtle::interpret_turtle_commands;
 use crate::{
     camera::{FlyCamera, MovementDirection},
     renderer::Renderer,
@@ -35,7 +35,7 @@ pub struct App {
     camera: Option<FlyCamera>,
     pressed_keys: HashSet<KeyCode>,
     interaction_mode: AppInteractionMode,
-    lsystem_config: Option<LSystemConfig>,
+    l_system_config: Option<LSystemConfig>,
     model_selection: Option<ModelSelection>,
     scene: Option<Scene>,
 }
@@ -64,7 +64,7 @@ impl ApplicationHandler for App {
             .unwrap()
             .handle_interaction_mode_change(&self.interaction_mode);
 
-        self.lsystem_config = Some(self.get_current_lsystem_config().clone());
+        self.l_system_config = Some(self.get_current_l_system_config().clone());
         self.calculate_transformations();
     }
 
@@ -206,10 +206,10 @@ impl App {
         };
 
         let gui = renderer.get_gui_controller();
-        let config = gui.get_lsystem_config();
+        let config = gui.get_l_system_config();
         let model_selection = gui.get_model_selection();
 
-        let config_changed = self.lsystem_config.as_ref() != Some(config);
+        let config_changed = self.l_system_config.as_ref() != Some(config);
         let model_changed = self.model_selection.as_ref() != Some(model_selection);
 
         if !config_changed && !model_changed {
@@ -222,7 +222,7 @@ impl App {
 
         if config_changed {
             log::info!("L-System config changed to {config:?}");
-            self.lsystem_config = Some(config.clone());
+            self.l_system_config = Some(config.clone());
         }
 
         if model_changed {
@@ -238,9 +238,8 @@ impl App {
 
         let production_rules: HashMap<char, String> =
             config.production_rules.iter().cloned().collect();
-        let lsystem = LSystem::new(&config.axiom, production_rules);
-        let generated = lsystem.generate(config.n_iterations);
-        let transformations = TurtleInterpreter::interpret(&generated, config.angle);
+        let l_system = generate_l_system(&config.axiom, production_rules, config.n_iterations);
+        let transformations = interpret_turtle_commands(&l_system, config.angle);
 
         if let Some(scene) = &mut self.scene {
             scene.update_transformations(transformations, config.fractal_height);
@@ -250,24 +249,27 @@ impl App {
     }
 
     fn calculate_transformations(&mut self) {
-        let lsystem_config = self.get_current_lsystem_config();
-        let target_height = lsystem_config.fractal_height;
+        let l_system_config = self.get_current_l_system_config();
+        let target_height = l_system_config.fractal_height;
         let production_rules: HashMap<char, String> =
-            lsystem_config.production_rules.iter().cloned().collect();
-        let lsystem = LSystem::new(&lsystem_config.axiom, production_rules);
-        let generated_string = lsystem.generate(lsystem_config.n_iterations);
-        let transformations = TurtleInterpreter::interpret(&generated_string, lsystem_config.angle);
+            l_system_config.production_rules.iter().cloned().collect();
+        let l_system = generate_l_system(
+            &l_system_config.axiom,
+            production_rules,
+            l_system_config.n_iterations,
+        );
+        let transformations = interpret_turtle_commands(&l_system, l_system_config.angle);
         self.scene
             .as_mut()
             .unwrap()
             .update_transformations(transformations, target_height);
     }
 
-    fn get_current_lsystem_config(&self) -> &LSystemConfig {
+    fn get_current_l_system_config(&self) -> &LSystemConfig {
         self.renderer
             .as_ref()
             .unwrap()
             .get_gui_controller()
-            .get_lsystem_config()
+            .get_l_system_config()
     }
 }
