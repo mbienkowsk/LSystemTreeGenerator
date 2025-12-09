@@ -37,6 +37,7 @@ pub enum PresetSelection {
     Tree3D,
     Bush,
     Seaweed,
+    TrunkTree,
     Custom,
 }
 
@@ -63,6 +64,16 @@ impl PresetSelection {
                 n_iterations: 4,
                 angle: 20.0,
                 fractal_height: 3.0,
+            },
+            PresetSelection::TrunkTree => LSystemConfig {
+                axiom: "FX".to_string(),
+                production_rules: vec![
+                    ('X', "[+FX][-FX][&FX][^FX][\\FX][/FX]".to_string()),
+                    ('F', "FF".to_string()),
+                ],
+                n_iterations: 3,
+                angle: 28.0,
+                fractal_height: 4.0,
             },
             PresetSelection::Custom => LSystemConfig {
                 axiom: "F".to_string(),
@@ -171,6 +182,7 @@ impl GuiController {
                 ui.selectable_value(preset_selection, PresetSelection::Tree3D, "Tree 3D");
                 ui.selectable_value(preset_selection, PresetSelection::Bush, "Bush");
                 ui.selectable_value(preset_selection, PresetSelection::Seaweed, "Seaweed");
+                ui.selectable_value(preset_selection, PresetSelection::TrunkTree, "Trunk Tree");
                 ui.selectable_value(preset_selection, PresetSelection::Custom, "Custom");
             });
 
