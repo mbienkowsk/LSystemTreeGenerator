@@ -95,7 +95,11 @@ impl Renderer {
             let instance_data: Vec<InstanceData> = scene
                 .transformations()
                 .iter()
-                .map(|&matrix| InstanceData::from_matrix(matrix))
+                .flat_map(|transform_list| {
+                    transform_list
+                        .iter()
+                        .map(|matrix| InstanceData::from_matrix(*matrix))
+                })
                 .collect();
 
             self.draw_model_instanced(
@@ -219,6 +223,10 @@ impl Renderer {
     pub fn get_aspect_ratio(&self) -> f32 {
         let size = self.window.inner_size();
         size.width as f32 / size.height as f32
+    }
+
+    pub fn unset_requires_tree_regeneration(&mut self) {
+        self.gui.unset_requires_tree_regeneration();
     }
 }
 

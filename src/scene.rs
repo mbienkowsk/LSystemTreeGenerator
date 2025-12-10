@@ -5,7 +5,8 @@ use tobj::Model;
 pub struct Scene {
     floor: Model3D,
     fractal_base: Model3D,
-    transformations: Vec<Mat4>,
+    transformations: Vec<Vec<Mat4>>,
+    pub displacement_matrices: Vec<Mat4>,
     target_height: f32,
     light_position: [f32; 3],
 }
@@ -14,7 +15,8 @@ impl Scene {
     pub fn new(
         floor: Model3D,
         fractal_base: Model3D,
-        transformations: Vec<Mat4>,
+        transformations: Vec<Vec<Mat4>>,
+        displacement_matrices: Vec<Mat4>,
         target_height: f32,
         light_position: [f32; 3],
     ) -> Self {
@@ -22,6 +24,7 @@ impl Scene {
             floor,
             fractal_base,
             transformations,
+            displacement_matrices,
             target_height,
             light_position,
         }
@@ -35,7 +38,7 @@ impl Scene {
         &self.fractal_base
     }
 
-    pub fn transformations(&self) -> &[Mat4] {
+    pub fn transformations(&self) -> &Vec<Vec<Mat4>> {
         &self.transformations
     }
 
@@ -47,7 +50,7 @@ impl Scene {
         &self.light_position
     }
 
-    pub fn update_transformations(&mut self, transformations: Vec<Mat4>, target_height: f32) {
+    pub fn update_transformations(&mut self, transformations: Vec<Vec<Mat4>>, target_height: f32) {
         let scaled_transformations = Self::scale_transformations_to_height(
             transformations,
             target_height,
@@ -71,7 +74,7 @@ impl Scene {
             .fold(f32::NEG_INFINITY, f32::max)
     }
 
-    fn fractal_total_height(base: &Model, transformations: &[Mat4]) -> f32 {
+    fn fractal_total_height(base: &Model, transformations: &[Vec<Mat4>]) -> f32 {
         if transformations.is_empty() {
             return 0.0;
         }
@@ -81,15 +84,15 @@ impl Scene {
 
         transformations
             .iter()
-            .map(|mat| (mat * up_vector)[1])
+            .flat_map(|mat_list| mat_list.iter().map(|mat| (mat * up_vector)[1]))
             .fold(f32::NEG_INFINITY, f32::max)
     }
 
     fn scale_transformations_to_height(
-        transformations: Vec<Mat4>,
+        transformations: Vec<Vec<Mat4>>,
         target_height: f32,
         base_model: &Model,
-    ) -> Vec<Mat4> {
+    ) -> Vec<Vec<Mat4>> {
         let current_height = Self::fractal_total_height(base_model, &transformations);
         if current_height == 0.0 {
             return transformations;
@@ -102,7 +105,7 @@ impl Scene {
 
         transformations
             .into_iter()
-            .map(|mat| scale_matrix * mat)
+            .map(|mat_list| mat_list.into_iter().map(|mat| scale_matrix * mat).collect())
             .collect()
     }
 }
