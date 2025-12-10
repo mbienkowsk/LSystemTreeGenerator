@@ -1,3 +1,4 @@
+use crate::common::ModelSelection;
 use egui::Ui;
 use egui_glium::EguiGlium;
 use egui_glium::egui_winit::egui::ViewportId;
@@ -11,6 +12,7 @@ pub struct GuiController {
     egui_glium: EguiGlium,
     model_selection: ModelSelection,
     lsystem_config: LSystemConfig,
+    preset_selection: PresetSelection,
     shading_mode: ShadingMode,
     interpolation_color_low: [f32; 3],
     interpolation_color_high: [f32; 3],
@@ -24,18 +26,12 @@ pub struct LSystemConfig {
     pub production_rules: Vec<(char, String)>,
     pub n_iterations: u32,
     pub angle: f32,
-    pub fractal_height: f32, // TODO move elsewhere, now leaving here for convenience with App update logic
+    pub fractal_height: f32,
 }
 
 impl Default for LSystemConfig {
     fn default() -> Self {
-        Self {
-            axiom: "F".to_string(),
-            production_rules: vec![('F', "F[+F][&F][\\F]F[-F][^F][/F]F".to_string())],
-            n_iterations: 3,
-            angle: 25.0,
-            fractal_height: 3.0,
-        }
+        PresetSelection::Tree3D.to_config()
     }
 }
 
@@ -74,10 +70,58 @@ impl Default for TreeGenerationConfig {
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub enum ModelSelection {
-    Cylinder,
-    Monkey,
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum PresetSelection {
+    Tree3D,
+    Bush,
+    Seaweed,
+    TrunkTree,
+    Custom,
+}
+
+impl PresetSelection {
+    pub fn to_config(self) -> LSystemConfig {
+        match self {
+            PresetSelection::Tree3D => LSystemConfig {
+                axiom: "F".to_string(),
+                production_rules: vec![('F', "F[+F][&F][\\F]F[-F][^F][/F]F".to_string())],
+                n_iterations: 3,
+                angle: 25.0,
+                fractal_height: 3.0,
+            },
+            PresetSelection::Bush => LSystemConfig {
+                axiom: "F".to_string(),
+                production_rules: vec![('F', "FF[++F][-F][&F][^F]".to_string())],
+                n_iterations: 4,
+                angle: 22.5,
+                fractal_height: 3.0,
+            },
+            PresetSelection::Seaweed => LSystemConfig {
+                axiom: "F".to_string(),
+                production_rules: vec![('F', "F[+F]F[-F][F]".to_string())],
+                n_iterations: 4,
+                angle: 20.0,
+                fractal_height: 3.0,
+            },
+            PresetSelection::TrunkTree => LSystemConfig {
+                axiom: "FX".to_string(),
+                production_rules: vec![
+                    ('X', "[+FX][-FX][&FX][^FX][\\FX][/FX]".to_string()),
+                    ('F', "FF".to_string()),
+                ],
+                n_iterations: 3,
+                angle: 28.0,
+                fractal_height: 4.0,
+            },
+            PresetSelection::Custom => LSystemConfig {
+                axiom: "F".to_string(),
+                production_rules: vec![('F', "F".to_string())],
+                n_iterations: 1,
+                angle: 25.0,
+                fractal_height: 3.0,
+            },
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -108,6 +152,7 @@ impl GuiController {
             model_selection: ModelSelection::Cylinder,
             shading_mode: ShadingMode::Phong,
             lsystem_config: LSystemConfig::default(),
+            preset_selection: PresetSelection::Tree3D,
             interpolation_color_low: [0.28, 0.14, 0.01],
             interpolation_color_high: [0.08, 0.2, 0.01],
             tree_generation_config: TreeGenerationConfig::default(),
@@ -152,11 +197,14 @@ impl GuiController {
         shading_mode: &mut ShadingMode,
         ui: &mut Ui,
     ) {
-        egui::ComboBox::from_label("Selected Model")
+        egui::ComboBox::from_label("Base Model")
             .selected_text(format!("{model_selection:?}"))
             .show_ui(ui, |ui| {
-                ui.selectable_value(model_selection, ModelSelection::Monkey, "Monkey");
                 ui.selectable_value(model_selection, ModelSelection::Cylinder, "Cylinder");
+                ui.selectable_value(model_selection, ModelSelection::Branch, "Branch");
+                ui.selectable_value(model_selection, ModelSelection::Twig, "Twig");
+                ui.selectable_value(model_selection, ModelSelection::Leaf, "Leaf");
+                ui.selectable_value(model_selection, ModelSelection::Monkey, "Monkey");
             });
 
         ui.label("Shading Mode:");
@@ -215,19 +263,78 @@ impl GuiController {
         }
     }
 
-    // TODO make editable
-    fn ui_lsystem_config(lsystem_config: &mut LSystemConfig, ui: &mut Ui) {
+    fn ui_lsystem_config(
+        lsystem_config: &mut LSystemConfig,
+        preset_selection: &mut PresetSelection,
+        ui: &mut Ui,
+    ) {
+        ui.label("LSystem Preset:");
+        let old_preset = *preset_selection;
+        egui::ComboBox::from_label("Preset")
+            .selected_text(format!("{preset_selection:?}"))
+            .show_ui(ui, |ui| {
+                ui.selectable_value(preset_selection, PresetSelection::Tree3D, "Tree 3D");
+                ui.selectable_value(preset_selection, PresetSelection::Bush, "Bush");
+                ui.selectable_value(preset_selection, PresetSelection::Seaweed, "Seaweed");
+                ui.selectable_value(preset_selection, PresetSelection::TrunkTree, "Trunk Tree");
+                ui.selectable_value(preset_selection, PresetSelection::Custom, "Custom");
+            });
+
+        if old_preset != *preset_selection && *preset_selection != PresetSelection::Custom {
+            *lsystem_config = preset_selection.to_config();
+        }
+
+        ui.separator();
         ui.label("LSystem Config:");
         ui.add(
             egui::Slider::new(&mut lsystem_config.n_iterations, 0..=6).text("Number of Iterations"),
         );
         ui.add(egui::Slider::new(&mut lsystem_config.angle, 0.0..=45.0).text("Angle"));
-        ui.label(format!("{:?}", lsystem_config.axiom));
+
+        ui.horizontal(|ui| {
+            ui.label("Axiom:");
+            if ui.text_edit_singleline(&mut lsystem_config.axiom).changed() {
+                *preset_selection = PresetSelection::Custom;
+            }
+        });
+
         ui.label("Production Rules:");
-        for (i, (symbol, replacement)) in lsystem_config.production_rules.iter().enumerate() {
+
+        let mut rules_changed = false;
+        let mut to_remove = None;
+
+        for (i, (symbol, replacement)) in lsystem_config.production_rules.iter_mut().enumerate() {
             ui.horizontal(|ui| {
-                ui.label(format!("{i}: {symbol} -> {replacement}"));
+                let mut symbol_str = symbol.to_string();
+                ui.label(format!("{i}:"));
+                if ui.text_edit_singleline(&mut symbol_str).changed()
+                    && let Some(c) = symbol_str.chars().next()
+                {
+                    *symbol = c;
+                    rules_changed = true;
+                }
+                ui.label("->");
+                if ui.text_edit_singleline(replacement).changed() {
+                    rules_changed = true;
+                }
+                if ui.button("❌").clicked() {
+                    to_remove = Some(i);
+                    rules_changed = true;
+                }
             });
+        }
+
+        if let Some(idx) = to_remove {
+            lsystem_config.production_rules.remove(idx);
+        }
+
+        if ui.button("➕ Add Rule").clicked() {
+            lsystem_config.production_rules.push(('X', "X".to_string()));
+            rules_changed = true;
+        }
+
+        if rules_changed {
+            *preset_selection = PresetSelection::Custom;
         }
     }
 
@@ -247,6 +354,7 @@ impl GuiController {
         let model_selection = &mut self.model_selection;
         let shading_mode = &mut self.shading_mode;
         let lsystem_config = &mut self.lsystem_config;
+        let preset_selection = &mut self.preset_selection;
         let color_low = &mut self.interpolation_color_low;
         let color_high = &mut self.interpolation_color_high;
 
@@ -255,7 +363,7 @@ impl GuiController {
                 GuiController::ui_control_panel(model_selection, shading_mode, ui);
                 GuiController::ui_fractal_height(&mut lsystem_config.fractal_height, ui);
                 ui.separator();
-                GuiController::ui_lsystem_config(lsystem_config, ui);
+                GuiController::ui_lsystem_config(lsystem_config, preset_selection, ui);
                 ui.separator();
                 GuiController::ui_color_panel(color_low, color_high, ui);
                 ui.separator();
